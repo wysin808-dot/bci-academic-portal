@@ -139,7 +139,7 @@ const portalData = {
     focus: "4 classes · 23 submissions",
     heroTitle: "Today’s teaching load is ready.",
     heroCopy: "You have two attendance sessions, one assignment to release, and 23 submissions waiting for review.",
-    nav: ["Today Classes", "Attendance", "Assignments", "Grade Entry", "WACE Teacher Marks", "Materials", "AI Quiz Generator", "Class Analytics"],
+    nav: ["Today Classes", "Attendance", "Assignments", "Assignment Bank", "Grade Entry", "WACE Teacher Marks", "Materials", "AI Quiz Generator", "Class Analytics"],
     heroMetrics: [
       ["4", "Classes"],
       ["23", "To mark"],
@@ -321,6 +321,16 @@ const defaultRecords = {
     { id: "a4", type: "reflection", scope: "Class", student: "", className: "Y11 Physics", subject: "Physics", title: "Lab safety reflection", due: "May 25", status: "Due", score: "", assignedBy: "Mr Lim", reflection: { prompts: ["What are the key lab safety rules you learned?", "Describe a situation where ignoring safety could be dangerous.", "How will you apply these rules in future practicals?"] } },
     { id: "a5", type: "worksheet", scope: "Individual", student: "Priya Shah", className: "", subject: "Chemistry", title: "Organic naming exercises", due: "May 26", status: "Due", score: "", assignedBy: "Mr Koh" },
     { id: "a6", type: "worksheet", scope: "Class", student: "", className: "Y11 Accounting", subject: "Accounting and Finance", title: "Balance sheet practice", due: "May 27", status: "Due", score: "", assignedBy: "Ms Lau" },
+  ],
+  assignmentBank: [
+    { id: "bk1", type: "worksheet", subject: "Physics", title: "Force & Motion Practice Set", marks: 30, teacher: "Mr Lim", createdAt: "2026-03-10", usedCount: 4, tags: ["mechanics", "year11"], questions: [{type:"mcq",text:"A 5kg object accelerates at 2m/s². What is the net force?",options:["5N","10N","15N","20N"],correct:1,marks:2},{type:"fill",text:"Newton's second law states F = ___ × a",answer:"m",marks:1},{type:"open",text:"Explain why a heavier car needs more braking distance.",marks:5}] },
+    { id: "bk2", type: "essay", subject: "English as an Additional Language or Dialect", title: "Persuasive Essay: Technology in Schools", marks: 40, teacher: "Ms Tan", createdAt: "2026-04-02", usedCount: 2, tags: ["writing", "year11"], essay: { essayType: "persuasive", minWords: 500, maxWords: 1000, stages: "draft-final" } },
+    { id: "bk3", type: "mcq", subject: "Chemistry", title: "Organic Chemistry Naming Quiz", marks: 20, teacher: "Mr Koh", createdAt: "2026-04-15", usedCount: 3, tags: ["organic", "year12"], questions: [{type:"mcq",text:"What is the IUPAC name of CH₃CH₂OH?",options:["Methanol","Ethanol","Propanol","Butanol"],correct:1,marks:2}] },
+    { id: "bk4", type: "practical", subject: "Physics", title: "Pendulum Period Investigation", marks: 25, teacher: "Mr Lim", createdAt: "2026-02-20", usedCount: 5, tags: ["waves", "practical", "year11"] },
+    { id: "bk5", type: "exam", subject: "Mathematics Methods", title: "Mid-Year Mock Exam — Calculus", marks: 80, teacher: "Ms Wong", createdAt: "2026-05-01", usedCount: 1, tags: ["calculus", "exam", "year12"] },
+    { id: "bk6", type: "reading", subject: "English", title: "Reading Comprehension: Climate Change Article", marks: 15, teacher: "Ms Tan", createdAt: "2026-03-25", usedCount: 2, tags: ["reading", "year11"] },
+    { id: "bk7", type: "fill_blank", subject: "Accounting and Finance", title: "Accounting Equation Fill-in", marks: 10, teacher: "Ms Lau", createdAt: "2026-04-08", usedCount: 3, tags: ["basics", "year11"] },
+    { id: "bk8", type: "reflection", subject: "Psychology", title: "Research Ethics Reflection", marks: 10, teacher: "Mr Ong", createdAt: "2026-05-10", usedCount: 1, tags: ["ethics", "year12"] },
   ],
   assignmentSubmissions: [
     { id: "as1", assignmentId: "a2", student: "Amanda Lee", submittedAt: "May 23 11:10", status: "Returned", fileName: "eald-essay-draft-amanda.pdf", feedback: "Essay structure improved", score: "88" },
@@ -1035,6 +1045,29 @@ function buildModuleView(role, moduleName) {
     };
   }
 
+  if (moduleName === "Assignment Bank") {
+    const bank = bankItemsForTeacher();
+    const typeCount = {};
+    bank.forEach((b) => { typeCount[b.type] = (typeCount[b.type] || 0) + 1; });
+    const topType = Object.entries(typeCount).sort((a, b) => b[1] - a[1])[0];
+    return {
+      ...dashboard,
+      heroTitle: `${bank.length} templates in your bank.`,
+      heroCopy: "Save assignment templates to reuse across terms and classes. Share with colleagues teaching the same subject.",
+      heroMetrics: [[`${bank.length}`, "Templates"], [`${bank.reduce((s, b) => s + (b.usedCount || 0), 0)}`, "Times used"], [`${new Set(bank.map((b) => b.subject)).size}`, "Subjects"]],
+      metrics: [["Total templates", `${bank.length}`, "blue"], ["Most common", topType ? topType[0] : "—", "green"], ["Shared with you", "0", "amber"], ["This term", `${bank.filter((b) => b.createdAt >= "2026-01-01").length}`, "blue"]],
+      primaryEyebrow: "Assignment Bank",
+      primaryTitle: "Saved Templates",
+      primaryAction: "Open Bank",
+      primary: bank.map((b) => [b.type, b.title, `${b.subject} · ${b.marks || 0} marks`, `Used ${b.usedCount || 0}×`]),
+      insightTitle: "Bank Tips",
+      insight: ["Reuse & share", "Save any assignment as a template. Next time, click 'From Bank' in the assignment modal to load it instantly."],
+      tableTitle: "Template Library",
+      tableHead: ["Type", "Title", "Subject", "Used"],
+      table: bank.map((b) => [b.type, b.title, b.subject, `${b.usedCount || 0}×`]),
+    };
+  }
+
   if (moduleName.includes("Assignment") || moduleName.includes("Submissions")) {
     const assignments = visibleAssignmentsForRole(currentRole);
     const individualCount = assignments.filter((item) => item.scope === "Individual").length;
@@ -1322,6 +1355,7 @@ async function handlePrimaryAction() {
 
   if (moduleName === "Students") { openAddStudentModal(); return; }
   if (moduleName === "Teachers") { openAddTeacherModal(); return; }
+  if (moduleName === "Assignment Bank") { openBankModal(); return; }
 
   if (moduleName.includes("AI")) {
     aiModal.classList.add("active");
@@ -1730,6 +1764,164 @@ document.querySelector("#assignment-close").addEventListener("click", closeAssig
 document.querySelector("#assignment-cancel")?.addEventListener("click", closeAssignmentModal);
 
 document.querySelector("#assignment-create").addEventListener("click", createIndividualAssignmentFromModal);
+
+/* ── Assignment Bank ────────────────────────────────── */
+const bankModal = document.getElementById("bank-modal");
+const bankList = document.getElementById("bank-list");
+const bankCount = document.getElementById("bank-count");
+const bankFilterSubject = document.getElementById("bank-filter-subject");
+const bankFilterType = document.getElementById("bank-filter-type");
+const bankSearch = document.getElementById("bank-search");
+
+function bankItemsForTeacher() {
+  const mySubjects = new Set(appState.teacherSubjects.filter((ts) => ts.teacher === demoTeacher).map((ts) => ts.subject));
+  return (appState.assignmentBank || []).filter((b) => b.teacher === demoTeacher || mySubjects.has(b.subject));
+}
+
+function renderBankList() {
+  const subjectFilter = bankFilterSubject.value;
+  const typeFilter = bankFilterType.value;
+  const search = bankSearch.value.toLowerCase().trim();
+  let items = bankItemsForTeacher();
+  if (subjectFilter) items = items.filter((b) => b.subject === subjectFilter);
+  if (typeFilter) items = items.filter((b) => b.type === typeFilter);
+  if (search) items = items.filter((b) => b.title.toLowerCase().includes(search) || (b.tags || []).some((t) => t.includes(search)));
+
+  bankCount.textContent = `${items.length} template${items.length !== 1 ? "s" : ""}`;
+
+  if (!items.length) {
+    bankList.innerHTML = '<p class="muted" style="text-align:center;padding:30px 0">No templates found. Create an assignment and click "Save to Bank" to add one.</p>';
+    return;
+  }
+
+  bankList.innerHTML = items.map((b) => `
+    <div class="bank-card" data-bank-id="${b.id}">
+      <div class="bank-card-header">
+        <span class="badge">${b.type}</span>
+        <strong>${b.title}</strong>
+        <span class="muted" style="margin-left:auto;font-size:0.75rem">Used ${b.usedCount || 0}×</span>
+      </div>
+      <div class="bank-card-meta">
+        <span>${b.subject}</span>
+        <span>${b.marks || 0} marks</span>
+        <span>${b.teacher}</span>
+        <span>${b.createdAt || ""}</span>
+      </div>
+      ${b.tags?.length ? `<div class="bank-card-tags">${b.tags.map((t) => `<span class="bank-tag">${t}</span>`).join("")}</div>` : ""}
+      <div class="bank-card-actions">
+        <button type="button" class="ghost-button bank-use" data-bank-id="${b.id}" style="font-size:0.8rem;padding:4px 12px">Use Template</button>
+        <button type="button" class="ghost-button bank-delete" data-bank-id="${b.id}" style="font-size:0.8rem;padding:4px 10px;color:var(--red,#d32)">Delete</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openBankModal() {
+  const mySubjects = [...new Set(bankItemsForTeacher().map((b) => b.subject))];
+  bankFilterSubject.innerHTML = '<option value="">All Subjects</option>' + mySubjects.map((s) => `<option value="${s}">${s}</option>`).join("");
+  bankFilterType.value = "";
+  bankSearch.value = "";
+  renderBankList();
+  bankModal.classList.add("active");
+  bankModal.setAttribute("aria-hidden", "false");
+}
+
+function closeBankModal() {
+  bankModal.classList.remove("active");
+  bankModal.setAttribute("aria-hidden", "true");
+}
+
+function saveCurrentToBank() {
+  const subject = assignmentSubject.value;
+  const type = assignmentType.value;
+  const title = assignmentTitle.value.trim();
+  if (!title) { showToast("Enter a title first"); assignmentTitle.focus(); return; }
+
+  const template = {
+    id: `bk${Date.now()}`,
+    type,
+    subject,
+    title,
+    marks: assignmentMarks.value ? Number(assignmentMarks.value) : null,
+    teacher: demoTeacher,
+    createdAt: new Date().toISOString().slice(0, 10),
+    usedCount: 0,
+    tags: [],
+    instructions: assignmentInstructions.value.trim(),
+    questions: assignmentQuestions.length ? [...assignmentQuestions] : undefined,
+  };
+  if (type === "essay") {
+    template.essay = {
+      essayType: document.getElementById("essay-type")?.value,
+      prompt: document.getElementById("essay-prompt")?.value,
+      minWords: Number(document.getElementById("essay-min-words")?.value) || 300,
+      maxWords: Number(document.getElementById("essay-max-words")?.value) || 800,
+      stages: document.getElementById("essay-stages")?.value,
+    };
+  }
+  if (type === "reflection") template.reflection = collectReflectionData();
+  if (type === "practical" || type === "lab") template.practical = collectPracticalData();
+  if (type === "project") template.project = collectProjectData();
+  if (type === "exam") template.exam = collectExamData();
+
+  if (!appState.assignmentBank) appState.assignmentBank = [];
+  appState.assignmentBank.unshift(template);
+  saveState();
+  showToast(`"${title}" saved to your bank`);
+}
+
+function loadFromBank(bankId) {
+  const template = (appState.assignmentBank || []).find((b) => b.id === bankId);
+  if (!template) return;
+
+  assignmentTitle.value = template.title || "";
+  assignmentInstructions.value = template.instructions || "";
+  assignmentMarks.value = template.marks || "";
+  assignmentType.value = template.type || "worksheet";
+  assignmentType.dispatchEvent(new Event("change"));
+
+  if (template.questions?.length) {
+    assignmentQuestions.length = 0;
+    assignmentQuestions.push(...structuredClone(template.questions));
+    renderQuestionList();
+  }
+  if (template.essay && document.getElementById("essay-type")) {
+    document.getElementById("essay-type").value = template.essay.essayType || "argumentative";
+    document.getElementById("essay-prompt").value = template.essay.prompt || "";
+    document.getElementById("essay-min-words").value = template.essay.minWords || 300;
+    document.getElementById("essay-max-words").value = template.essay.maxWords || 800;
+    document.getElementById("essay-stages").value = template.essay.stages || "single";
+  }
+
+  const subjectOpts = [...assignmentSubject.options].map((o) => o.value);
+  if (subjectOpts.includes(template.subject)) assignmentSubject.value = template.subject;
+
+  template.usedCount = (template.usedCount || 0) + 1;
+  saveState();
+  closeBankModal();
+  showToast(`Loaded "${template.title}" from bank`);
+}
+
+document.querySelector("#assignment-save-bank")?.addEventListener("click", saveCurrentToBank);
+document.querySelector("#assignment-from-bank")?.addEventListener("click", () => {
+  openBankModal();
+});
+document.querySelector("#bank-close")?.addEventListener("click", closeBankModal);
+document.querySelector("#bank-close-btn")?.addEventListener("click", closeBankModal);
+bankFilterSubject?.addEventListener("change", renderBankList);
+bankFilterType?.addEventListener("change", renderBankList);
+bankSearch?.addEventListener("input", renderBankList);
+bankList?.addEventListener("click", (e) => {
+  const useBtn = e.target.closest(".bank-use");
+  if (useBtn) { loadFromBank(useBtn.dataset.bankId); return; }
+  const delBtn = e.target.closest(".bank-delete");
+  if (delBtn) {
+    appState.assignmentBank = (appState.assignmentBank || []).filter((b) => b.id !== delBtn.dataset.bankId);
+    saveState();
+    renderBankList();
+    showToast("Template deleted");
+  }
+});
 
 document.getElementById("scope-toggle")?.addEventListener("click", (e) => {
   const btn = e.target.closest(".scope-btn");

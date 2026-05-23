@@ -207,7 +207,10 @@
             <p class="eyebrow">Teacher Assignment</p>
             <h3>Create Assignment</h3>
           </div>
-          <button class="icon-button" id="assignment-close" type="button">×</button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="ghost-button" id="assignment-from-bank" type="button" style="font-size:0.8rem;padding:6px 12px">📂 From Bank</button>
+            <button class="icon-button" id="assignment-close" type="button">×</button>
+          </div>
         </div>
 
         <div class="assign-form-body">
@@ -572,8 +575,43 @@
           <p class="modal-hint" style="margin:0">Only subjects you are authorised to teach will appear. Assignments sync to the student portal and evidence log.</p>
           <div class="assign-footer-actions">
             <button class="ghost-button" id="assignment-cancel" type="button">Cancel</button>
-            <button class="primary-button" id="assignment-create" type="button">Create Assignment</button>
+            <button class="ghost-button" id="assignment-save-bank" type="button">Save to Bank</button>
+            <button class="primary-button" id="assignment-create" type="button">Create & Assign</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="bank-modal" aria-hidden="true">
+      <div class="modal-card" style="max-width:720px">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Teacher Resources</p>
+            <h3 id="bank-title">My Assignment Bank</h3>
+          </div>
+          <button class="icon-button" id="bank-close" type="button">×</button>
+        </div>
+        <div style="padding:0 20px 8px;display:flex;gap:8px;flex-wrap:wrap">
+          <select id="bank-filter-subject" style="flex:1;min-width:140px"><option value="">All Subjects</option></select>
+          <select id="bank-filter-type" style="flex:1;min-width:120px">
+            <option value="">All Types</option>
+            <option value="worksheet">Worksheet</option>
+            <option value="mcq">MCQ</option>
+            <option value="fill_blank">Fill Blank</option>
+            <option value="reading">Reading</option>
+            <option value="essay">Essay</option>
+            <option value="quiz">Quiz</option>
+            <option value="practical">Practical</option>
+            <option value="project">Project</option>
+            <option value="exam">Exam</option>
+            <option value="reflection">Reflection</option>
+          </select>
+          <input type="text" id="bank-search" placeholder="Search titles…" style="flex:2;min-width:140px" />
+        </div>
+        <div id="bank-list" style="padding:0 20px 20px;max-height:400px;overflow-y:auto"></div>
+        <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <span id="bank-count" class="muted" style="font-size:0.8rem"></span>
+          <button class="ghost-button" id="bank-close-btn" type="button">Close</button>
         </div>
       </div>
     </div>
@@ -817,7 +855,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
     <script src="./data-adapter.js"></script>
-    <script src="./app.js?v=27"></script>
+    <script src="./app.js?v=28"></script>
     <script src="./submissions.js?v=6"></script>
   </body>
 </html>

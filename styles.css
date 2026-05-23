@@ -1348,3 +1348,48 @@ body.dark .question-badge.multi { background: #1a3540; color: #6dc8e8; }
   font-family: inherit;
   resize: vertical;
 }
+
+/* ── Assignment Bank ────────────────────────────────── */
+.bank-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+.bank-card:hover { border-color: var(--primary); }
+.bank-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bank-card-header strong { font-size: 0.9rem; }
+.bank-card-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.bank-card-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.bank-tag {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary);
+  font-weight: 500;
+}
+.bank-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}

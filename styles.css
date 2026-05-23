@@ -944,6 +944,93 @@ body.dark .question-badge.open { background: #2a1a40; color: #b08ae6; }
   text-align: center;
 }
 
+.essay-builder {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.outline-template {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.outline-section {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface-2);
+}
+
+.outline-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.outline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.outline-dot.intro { background: var(--blue); }
+.outline-dot.body { background: var(--green); }
+.outline-dot.conclusion { background: var(--amber); }
+
+.outline-section input {
+  width: 100%;
+  margin-top: 4px;
+}
+
+#outline-body-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rubric-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.rubric-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 60px 36px;
+  gap: 8px;
+  align-items: end;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+}
+
+.rubric-row label {
+  margin-top: 0 !important;
+}
+
+.rubric-row .rubric-del {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px;
+  border-radius: 4px;
+  align-self: end;
+}
+
+.rubric-row .rubric-del:hover {
+  background: var(--line);
+  color: var(--red);
+}
+
 @media (max-width: 720px) {
   .assign-form-body {
     grid-template-columns: 1fr;

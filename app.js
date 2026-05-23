@@ -1457,6 +1457,8 @@ async function openAssignmentModal() {
   document.getElementById("questions-builder").style.display = "none";
   document.getElementById("question-list").innerHTML = "";
   document.getElementById("question-count").textContent = "0 questions · 0 marks";
+  document.getElementById("essay-builder").style.display = "none";
+  resetEssayBuilder();
   setAssignmentScope("individual");
 
   let populated = false;
@@ -1597,6 +1599,21 @@ async function createIndividualAssignmentFromModal() {
     waceType,
     attachments: assignmentAttachedFiles.map((f) => f.name),
     questions: assignmentQuestions.length ? [...assignmentQuestions] : undefined,
+    essay: type === "essay" ? {
+      essayType: document.getElementById("essay-type")?.value,
+      prompt: document.getElementById("essay-prompt")?.value,
+      minWords: Number(document.getElementById("essay-min-words")?.value) || 300,
+      maxWords: Number(document.getElementById("essay-max-words")?.value) || 800,
+      stages: document.getElementById("essay-stages")?.value,
+      references: document.getElementById("essay-references")?.value,
+      extra: document.getElementById("essay-extra")?.value,
+      outline: {
+        intro: document.getElementById("outline-intro")?.value,
+        body: Array.from(document.querySelectorAll(".outline-body-input")).map((el) => el.value).filter(Boolean),
+        conclusion: document.getElementById("outline-conclusion")?.value,
+      },
+      rubric: [...essayRubricCriteria],
+    } : undefined,
   };
 
   const target = scope === "class" ? className : student;
@@ -1715,10 +1732,14 @@ function showQuestionsBuilder() {
 
 assignmentType?.addEventListener("change", () => {
   const type = assignmentType.value;
-  if (["homework", "quiz", "practice_set", "revision"].includes(type)) {
+  if (type === "essay") {
+    showEssayBuilder();
+  } else if (["homework", "quiz", "practice_set", "revision"].includes(type)) {
+    hideEssayBuilder();
     showQuestionsBuilder();
   } else {
     document.getElementById("questions-builder").style.display = "none";
+    hideEssayBuilder();
   }
 });
 
@@ -1908,6 +1929,137 @@ document.getElementById("ai-gen-questions-btn")?.addEventListener("click", () =>
   assignmentTitle.value = assignmentTitle.value || `${subject} — Practice Questions`;
   showToast(`AI generated ${assignmentQuestions.length} questions for ${subject}`);
 });
+
+// ── Essay Builder ──────────────────────────────────────
+let essayRubricCriteria = [];
+
+function renderEssayRubric() {
+  const list = document.getElementById("essay-rubric-list");
+  const totalMarks = essayRubricCriteria.reduce((s, c) => s + (c.marks || 0), 0);
+  document.getElementById("essay-total-marks").textContent = `${totalMarks} marks`;
+
+  list.innerHTML = essayRubricCriteria.map((c, i) => `
+    <div class="rubric-row">
+      <label>Criterion <input type="text" value="${escAttr(c.name)}" data-ridx="${i}" data-rfield="name" placeholder="e.g. Content & Ideas" /></label>
+      <label>Weight <select data-ridx="${i}" data-rfield="weight">
+        <option value="high" ${c.weight === "high" ? "selected" : ""}>High</option>
+        <option value="medium" ${c.weight === "medium" ? "selected" : ""}>Medium</option>
+        <option value="low" ${c.weight === "low" ? "selected" : ""}>Low</option>
+      </select></label>
+      <label>Marks <input type="number" value="${c.marks || 0}" min="0" max="100" data-ridx="${i}" data-rfield="marks" style="text-align:center" /></label>
+      <button type="button" class="rubric-del" data-ridx="${i}" title="Delete">×</button>
+    </div>
+  `).join("");
+}
+
+function addEssayRubricRow(name = "", marks = 5, weight = "medium") {
+  essayRubricCriteria.push({ name, marks, weight });
+  renderEssayRubric();
+}
+
+document.getElementById("add-rubric-btn")?.addEventListener("click", () => addEssayRubricRow());
+
+document.getElementById("essay-rubric-list")?.addEventListener("input", (e) => {
+  const el = e.target;
+  const idx = Number(el.dataset.ridx);
+  const field = el.dataset.rfield;
+  const c = essayRubricCriteria[idx];
+  if (!c || !field) return;
+  if (field === "name") c.name = el.value;
+  else if (field === "marks") { c.marks = Number(el.value) || 0; renderEssayRubric(); }
+  else if (field === "weight") c.weight = el.value;
+});
+
+document.getElementById("essay-rubric-list")?.addEventListener("click", (e) => {
+  const btn = e.target.closest(".rubric-del");
+  if (btn) {
+    essayRubricCriteria.splice(Number(btn.dataset.ridx), 1);
+    renderEssayRubric();
+  }
+});
+
+document.getElementById("add-body-para")?.addEventListener("click", () => {
+  const list = document.getElementById("outline-body-list");
+  const count = list.querySelectorAll("input").length + 1;
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "outline-body-input";
+  input.placeholder = `Body ¶${count}: Additional point or evidence`;
+  list.appendChild(input);
+});
+
+document.getElementById("ai-gen-essay-btn")?.addEventListener("click", () => {
+  const subject = assignmentSubject.value;
+  const essayType = document.getElementById("essay-type").value;
+
+  essayRubricCriteria = [
+    { name: "Content & Ideas", marks: 10, weight: "high" },
+    { name: "Structure & Organisation", marks: 8, weight: "high" },
+    { name: "Language & Style", marks: 8, weight: "medium" },
+    { name: "Grammar & Mechanics", marks: 4, weight: "low" },
+  ];
+  renderEssayRubric();
+
+  const prompts = {
+    argumentative: `Should artificial intelligence be used to grade student essays? Take a clear position and support your argument with evidence from at least two sources. Address potential counter-arguments.`,
+    narrative: `Write a narrative about a moment that changed your perspective on learning. Use descriptive language and literary techniques to engage the reader.`,
+    descriptive: `Describe a place that holds significant personal meaning to you. Use sensory details to create a vivid picture for the reader.`,
+    expository: `Explain how climate change affects marine ecosystems. Use specific examples and data to support your explanation.`,
+    analytical: `Analyse the techniques used by the author to convey their message in the text studied in class. Consider language features, structure, and context.`,
+    reflective: `Reflect on a challenge you faced during a group project. What did you learn about collaboration and how would you approach it differently?`,
+  };
+  document.getElementById("essay-prompt").value = prompts[essayType] || prompts.argumentative;
+
+  document.getElementById("outline-intro").value = "Hook + context + clear thesis statement";
+  const bodyList = document.getElementById("outline-body-list");
+  bodyList.innerHTML = "";
+  const bodyParagraphs = [
+    "Body ¶1: First supporting argument with evidence",
+    "Body ¶2: Second point or counter-argument analysis",
+    "Body ¶3: Additional evidence or synthesis of ideas",
+  ];
+  bodyParagraphs.forEach((p) => {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "outline-body-input";
+    input.value = p;
+    bodyList.appendChild(input);
+  });
+  document.getElementById("outline-conclusion").value = "Restate thesis + summarise arguments + final reflection or call to action";
+
+  const totalMarks = essayRubricCriteria.reduce((s, c) => s + (c.marks || 0), 0);
+  assignmentMarks.value = totalMarks;
+  assignmentTitle.value = assignmentTitle.value || `${subject} — ${essayType.charAt(0).toUpperCase() + essayType.slice(1)} Essay`;
+  showToast(`AI generated essay rubric and outline for ${subject}`);
+});
+
+function showEssayBuilder() {
+  document.getElementById("essay-builder").style.display = "";
+  document.getElementById("questions-builder").style.display = "none";
+}
+
+function hideEssayBuilder() {
+  document.getElementById("essay-builder").style.display = "none";
+}
+
+function resetEssayBuilder() {
+  essayRubricCriteria = [];
+  document.getElementById("essay-type").value = "argumentative";
+  document.getElementById("essay-prompt").value = "";
+  document.getElementById("essay-min-words").value = "300";
+  document.getElementById("essay-max-words").value = "800";
+  document.getElementById("essay-stages").value = "single";
+  document.getElementById("essay-references").value = "";
+  document.getElementById("essay-extra").value = "";
+  document.getElementById("outline-intro").value = "";
+  document.getElementById("outline-conclusion").value = "";
+  document.getElementById("outline-body-list").innerHTML =
+    ‘<input type="text" class="outline-body-input" placeholder="Body ¶1: Topic sentence + evidence + analysis" />’ +
+    ‘<input type="text" class="outline-body-input" placeholder="Body ¶2: Counter-argument or second point" />’ +
+    ‘<input type="text" class="outline-body-input" placeholder="Body ¶3: Supporting evidence or third point" />’;
+  document.getElementById("essay-rubric-list").innerHTML = "";
+  document.getElementById("essay-total-marks").textContent = "0 marks";
+}
 
 document.querySelector("#ai-generate").addEventListener("click", () => {
   const subject = document.querySelector("#ai-subject").value;

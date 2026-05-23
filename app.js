@@ -494,6 +494,7 @@ window.appState = appState;
 let currentRole = normalizeRole(appState.currentRole);
 let currentModule = appState.currentModule || 0;
 let authLockedRole = false;
+let demoTeacher = appState.demoTeacher || "Mr Lim";
 
 function normalizeRole(role) {
   if (role === "director") return "academic_director";
@@ -543,6 +544,7 @@ function loadState() {
 function saveState() {
   appState.currentRole = currentRole;
   appState.currentModule = currentModule;
+  appState.demoTeacher = demoTeacher;
   appState.schemaVersion = STATE_SCHEMA_VERSION;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
 }
@@ -809,8 +811,12 @@ function teacherCan(subject, capability) {
 }
 
 function visibleAssignmentsForRole(role) {
-  if (role !== "student") return appState.assignments;
-  return appState.assignments.filter((item) => item.scope === "Class" || item.student === CURRENT_STUDENT_NAME);
+  if (role === "student") return appState.assignments.filter((item) => item.scope === "Class" || item.student === CURRENT_STUDENT_NAME);
+  if (role === "teacher") {
+    const mySubjects = new Set(appState.teacherSubjects.filter((ts) => ts.teacher === demoTeacher).map((ts) => ts.subject));
+    return appState.assignments.filter((a) => mySubjects.has(a.subject));
+  }
+  return appState.assignments;
 }
 
 function submissionForAssignment(assignment, student = CURRENT_STUDENT_NAME) {
@@ -1225,11 +1231,15 @@ function renderPortal(role, moduleIndex = currentModule) {
   const moduleName = nav[currentModule];
   const data = buildModuleView(safeRole, moduleName);
 
+  if (teacherPicker) teacherPicker.style.display = safeRole === "teacher" ? "" : "none";
+
   viewEyebrow.textContent = data.label;
   viewTitle.textContent = currentModule === 0 ? data.title : moduleName;
   todayFocus.textContent = data.focus;
   quickAction.textContent = data.action;
-  heroTitle.textContent = data.heroTitle;
+  heroTitle.textContent = safeRole === "teacher" && currentModule === 0
+    ? `Welcome, ${demoTeacher}.`
+    : data.heroTitle;
   heroCopy.textContent = data.heroCopy;
   primaryEyebrow.textContent = data.primaryEyebrow;
   primaryTitle.textContent = data.primaryTitle;
@@ -1431,6 +1441,21 @@ roleSelect.addEventListener("change", () => {
   renderPortal(roleSelect.value, 0);
 });
 
+const teacherPicker = document.getElementById("teacher-picker");
+const teacherSelect = document.getElementById("teacher-select");
+function populateTeacherPicker() {
+  const names = [...new Set(appState.teacherSubjects.map((ts) => ts.teacher))];
+  teacherSelect.innerHTML = names.map((n) =>
+    `<option value="${n}" ${n === demoTeacher ? "selected" : ""}>${n}</option>`
+  ).join("");
+}
+populateTeacherPicker();
+teacherSelect.addEventListener("change", () => {
+  demoTeacher = teacherSelect.value;
+  saveState();
+  renderPortal(currentRole, currentModule);
+});
+
 navList.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-module]");
   if (!button) return;
@@ -1509,7 +1534,7 @@ async function openAssignmentModal() {
     }
   }
   if (!populated) {
-    const mySubjects = appState.teacherSubjects.filter((ts) => ts.canCreateAssignments);
+    const mySubjects = appState.teacherSubjects.filter((ts) => ts.canCreateAssignments && ts.teacher === demoTeacher);
     if (mySubjects.length) {
       assignmentSubject.innerHTML = mySubjects.map((s) =>
         `<option value="${s.subject}">${s.subject}</option>`

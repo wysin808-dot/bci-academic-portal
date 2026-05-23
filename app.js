@@ -1474,6 +1474,10 @@ document.querySelector("#theme-toggle").addEventListener("click", () => {
 });
 
 quickAction.addEventListener("click", () => {
+  if (currentRole === "teacher" && quickAction.textContent.includes("Assignment")) {
+    openAssignmentModal();
+    return;
+  }
   aiModal.classList.add("active");
   aiModal.setAttribute("aria-hidden", "false");
 });

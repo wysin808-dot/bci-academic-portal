@@ -315,12 +315,12 @@ const CURRENT_STUDENT_NAME = "Amanda Lee";
 
 const defaultRecords = {
   assignments: [
-    { id: "a1", scope: "Individual", student: "Amanda Lee", className: "", subject: "Mathematics Applications", title: "Financial maths practice", due: "Today 13:30", status: "Due", score: "", assignedBy: "Ms Wong" },
-    { id: "a2", scope: "Individual", student: "Amanda Lee", className: "", subject: "English as an Additional Language or Dialect", title: "Essay draft", due: "May 24", status: "Returned", score: "88", assignedBy: "Ms Tan" },
-    { id: "a3", scope: "Individual", student: "Jason Ng", className: "", subject: "Physics", title: "Force diagram worksheet", due: "May 23", status: "Late", score: "", assignedBy: "Mr Lim" },
-    { id: "a4", scope: "Class", student: "", className: "Y11 Physics", subject: "Physics", title: "Lab safety reflection", due: "May 25", status: "Due", score: "", assignedBy: "Mr Lim" },
-    { id: "a5", scope: "Individual", student: "Priya Shah", className: "", subject: "Chemistry", title: "Organic naming exercises", due: "May 26", status: "Due", score: "", assignedBy: "Mr Koh" },
-    { id: "a6", scope: "Class", student: "", className: "Y11 Accounting", subject: "Accounting and Finance", title: "Balance sheet practice", due: "May 27", status: "Due", score: "", assignedBy: "Ms Lau" },
+    { id: "a1", type: "worksheet", scope: "Individual", student: "Amanda Lee", className: "", subject: "Mathematics Applications", title: "Financial maths practice", due: "Today 13:30", status: "Due", score: "", assignedBy: "Ms Wong" },
+    { id: "a2", type: "essay", scope: "Individual", student: "Amanda Lee", className: "", subject: "English as an Additional Language or Dialect", title: "Essay draft", due: "May 24", status: "Returned", score: "88", assignedBy: "Ms Tan", essay: { stages: "single", minWords: 300, maxWords: 600, essayType: "expository" } },
+    { id: "a3", type: "worksheet", scope: "Individual", student: "Jason Ng", className: "", subject: "Physics", title: "Force diagram worksheet", due: "May 23", status: "Late", score: "", assignedBy: "Mr Lim" },
+    { id: "a4", type: "reflection", scope: "Class", student: "", className: "Y11 Physics", subject: "Physics", title: "Lab safety reflection", due: "May 25", status: "Due", score: "", assignedBy: "Mr Lim", reflection: { prompts: ["What are the key lab safety rules you learned?", "Describe a situation where ignoring safety could be dangerous.", "How will you apply these rules in future practicals?"] } },
+    { id: "a5", type: "worksheet", scope: "Individual", student: "Priya Shah", className: "", subject: "Chemistry", title: "Organic naming exercises", due: "May 26", status: "Due", score: "", assignedBy: "Mr Koh" },
+    { id: "a6", type: "worksheet", scope: "Class", student: "", className: "Y11 Accounting", subject: "Accounting and Finance", title: "Balance sheet practice", due: "May 27", status: "Due", score: "", assignedBy: "Ms Lau" },
   ],
   assignmentSubmissions: [
     { id: "as1", assignmentId: "a2", student: "Amanda Lee", submittedAt: "May 23 11:10", status: "Returned", fileName: "eald-essay-draft-amanda.pdf", feedback: "Essay structure improved", score: "88" },
@@ -514,6 +514,7 @@ function mergeStateWithDefaults(saved = {}) {
   if (!Array.isArray(merged.studentTimetables) || merged.studentTimetables.length === 0) merged.studentTimetables = base.studentTimetables;
   if (!Array.isArray(merged.assignmentSubmissions)) merged.assignmentSubmissions = base.assignmentSubmissions;
   merged.assignments = merged.assignments.map((item) => ({
+    type: "worksheet",
     scope: item.scope || (item.student ? "Individual" : "Class"),
     className: item.className || "",
     assignedBy: item.assignedBy || "Teacher",
@@ -1222,7 +1223,7 @@ function renderPortal(role, moduleIndex = currentModule) {
   currentRole = safeRole;
   currentModule = Math.min(moduleIndex, nav.length - 1);
   const moduleName = nav[currentModule];
-  const data = buildModuleView(role, moduleName);
+  const data = buildModuleView(safeRole, moduleName);
 
   viewEyebrow.textContent = data.label;
   viewTitle.textContent = currentModule === 0 ? data.title : moduleName;

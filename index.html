@@ -328,6 +328,21 @@
           </div>
         </div>
 
+        <div class="questions-builder" id="questions-builder" style="display:none">
+          <div class="questions-header">
+            <p class="subtable-title" style="margin:0">Questions</p>
+            <span class="question-count" id="question-count">0 questions · 0 marks</span>
+          </div>
+          <div class="question-list" id="question-list"></div>
+          <div class="question-add-bar">
+            <button type="button" class="ghost-button" id="add-mcq-btn">+ Multiple Choice</button>
+            <button type="button" class="ghost-button" id="add-fill-btn">+ Fill in Blank</button>
+            <button type="button" class="ghost-button" id="add-reading-btn">+ Reading Comprehension</button>
+            <button type="button" class="ghost-button" id="add-open-btn">+ Open Response</button>
+            <button type="button" class="ghost-button ai-gen-btn" id="ai-gen-questions-btn">✦ AI Generate</button>
+          </div>
+        </div>
+
         <div class="assign-footer">
           <p class="modal-hint" style="margin:0">Only subjects you are authorised to teach will appear. Assignments sync to the student portal and evidence log.</p>
           <div class="assign-footer-actions">
@@ -465,6 +480,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
     <script src="./data-adapter.js"></script>
-    <script src="./app.js?v=15"></script>
+    <script src="./app.js?v=16"></script>
   </body>
 </html>

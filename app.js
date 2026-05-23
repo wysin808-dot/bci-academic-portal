@@ -1451,8 +1451,12 @@ async function openAssignmentModal() {
   assignmentWaceTask.innerHTML = '<option value="">— None —</option>';
   assignmentWaceType.value = "";
   assignmentAttachedFiles = [];
+  assignmentQuestions = [];
   document.getElementById("assignment-attach-list").innerHTML = "";
   document.getElementById("assignment-publish-label").style.display = "none";
+  document.getElementById("questions-builder").style.display = "none";
+  document.getElementById("question-list").innerHTML = "";
+  document.getElementById("question-count").textContent = "0 questions · 0 marks";
   setAssignmentScope("individual");
 
   let populated = false;
@@ -1592,6 +1596,7 @@ async function createIndividualAssignmentFromModal() {
     waceTaskRef,
     waceType,
     attachments: assignmentAttachedFiles.map((f) => f.name),
+    questions: assignmentQuestions.length ? [...assignmentQuestions] : undefined,
   };
 
   const target = scope === "class" ? className : student;
@@ -1695,6 +1700,213 @@ document.getElementById("assignment-ai-btn")?.addEventListener("click", () => {
   assignmentTitle.value = assignmentTitle.value || `${subject} — AI-Generated ${typeLabel}`;
   assignmentInstructions.value = `AI-generated ${typeLabel.toLowerCase()} for ${subject}.\n\nThis practice set covers key topics from recent lessons. Students should attempt all questions independently before checking answers.\n\nEstimated time: 30–45 minutes.`;
   showToast(`AI practice content generated for ${subject}`);
+});
+
+// ── Question Builder ──────────────────────────────────────
+let assignmentQuestions = [];
+
+const questionTypeLabels = { mcq: "Multiple Choice", fill: "Fill in Blank", reading: "Reading", open: "Open Response" };
+const questionTypeBadge = { mcq: "MCQ", fill: "Fill", reading: "Reading", open: "Open" };
+
+function showQuestionsBuilder() {
+  const builder = document.getElementById("questions-builder");
+  if (builder) builder.style.display = "";
+}
+
+assignmentType?.addEventListener("change", () => {
+  const type = assignmentType.value;
+  if (["homework", "quiz", "practice_set", "revision"].includes(type)) {
+    showQuestionsBuilder();
+  } else {
+    document.getElementById("questions-builder").style.display = "none";
+  }
+});
+
+function renderQuestionList() {
+  const list = document.getElementById("question-list");
+  const countEl = document.getElementById("question-count");
+  const totalMarks = assignmentQuestions.reduce((s, q) => s + (q.marks || 0), 0);
+  countEl.textContent = `${assignmentQuestions.length} question${assignmentQuestions.length !== 1 ? "s" : ""} · ${totalMarks} marks`;
+
+  list.innerHTML = assignmentQuestions.map((q, i) => {
+    const badge = `<span class="question-badge ${q.type}">${questionTypeBadge[q.type]}</span>`;
+    const num = `<span class="question-num">Q${i + 1}</span>`;
+    const actions = `<div class="question-card-actions">
+      ${i > 0 ? `<button type="button" data-action="up" data-idx="${i}" title="Move up">↑</button>` : ""}
+      ${i < assignmentQuestions.length - 1 ? `<button type="button" data-action="down" data-idx="${i}" title="Move down">↓</button>` : ""}
+      <button type="button" data-action="delete" data-idx="${i}" title="Delete">×</button>
+    </div>`;
+    const head = `<div class="question-card-head">${badge}${num}${actions}</div>`;
+
+    let body = "";
+    if (q.type === "mcq") {
+      body = renderMcqBody(q, i);
+    } else if (q.type === "fill") {
+      body = renderFillBody(q, i);
+    } else if (q.type === "reading") {
+      body = renderReadingBody(q, i);
+    } else {
+      body = renderOpenBody(q, i);
+    }
+
+    return `<div class="question-card">${head}${body}</div>`;
+  }).join("");
+}
+
+function renderMcqBody(q, idx) {
+  const options = (q.options || ["", "", "", ""]).map((opt, oi) => {
+    const letter = String.fromCharCode(65 + oi);
+    const isCorrect = q.correctAnswer === oi;
+    return `<div class="mcq-option-row">
+      <span class="opt-letter ${isCorrect ? "correct" : ""}" data-idx="${idx}" data-opt="${oi}" title="Click to set correct answer">${letter}</span>
+      <input type="text" value="${escAttr(opt)}" placeholder="Option ${letter}" data-idx="${idx}" data-opt="${oi}" data-field="option" />
+    </div>`;
+  }).join("");
+  return `
+    <label>Question <input type="text" value="${escAttr(q.question)}" data-idx="${idx}" data-field="question" placeholder="e.g. What is the SI unit of force?" /></label>
+    <div class="mcq-options">${options}</div>
+    <div class="form-grid" style="margin-top:8px">
+      <label>Marks <input type="number" class="question-marks-input" value="${q.marks || 1}" min="1" max="50" data-idx="${idx}" data-field="marks" /></label>
+      <label>Explanation (optional) <input type="text" value="${escAttr(q.explanation || "")}" data-idx="${idx}" data-field="explanation" placeholder="Why this answer is correct" /></label>
+    </div>`;
+}
+
+function renderFillBody(q, idx) {
+  return `
+    <label>Question (use ___ for blanks) <input type="text" value="${escAttr(q.question)}" data-idx="${idx}" data-field="question" placeholder="e.g. The acceleration due to gravity is ___ m/s²" /></label>
+    <div class="form-grid" style="margin-top:8px">
+      <label>Correct answer(s) <input type="text" value="${escAttr(q.answer || "")}" data-idx="${idx}" data-field="answer" placeholder="e.g. 9.8 or 9.81" /></label>
+      <label>Marks <input type="number" class="question-marks-input" value="${q.marks || 1}" min="1" max="50" data-idx="${idx}" data-field="marks" /></label>
+    </div>`;
+}
+
+function renderReadingBody(q, idx) {
+  const subQs = (q.subQuestions || [""]).map((sq, si) =>
+    `<div class="reading-sub-q">
+      <span>(${si + 1})</span>
+      <input type="text" value="${escAttr(sq)}" data-idx="${idx}" data-sub="${si}" data-field="subq" placeholder="Question about the passage" />
+    </div>`
+  ).join("");
+  return `
+    <div class="reading-passage">
+      <label>Reading passage <textarea rows="3" data-idx="${idx}" data-field="passage" placeholder="Paste or type the reading material here…">${escHtml(q.passage || "")}</textarea></label>
+    </div>
+    <div class="reading-sub-questions">
+      ${subQs}
+      <button type="button" class="ghost-button" data-action="add-sub" data-idx="${idx}" style="font-size:12px;padding:4px 10px;align-self:flex-start">+ Add sub-question</button>
+    </div>
+    <div class="form-grid" style="margin-top:8px">
+      <label>Marks (total for passage) <input type="number" class="question-marks-input" value="${q.marks || 5}" min="1" max="100" data-idx="${idx}" data-field="marks" /></label>
+    </div>`;
+}
+
+function renderOpenBody(q, idx) {
+  return `
+    <label>Question <input type="text" value="${escAttr(q.question)}" data-idx="${idx}" data-field="question" placeholder="e.g. Explain the relationship between force and acceleration." /></label>
+    <div class="form-grid" style="margin-top:8px">
+      <label>Expected answer / rubric hint <input type="text" value="${escAttr(q.answer || "")}" data-idx="${idx}" data-field="answer" placeholder="Key points to look for" /></label>
+      <label>Marks <input type="number" class="question-marks-input" value="${q.marks || 3}" min="1" max="50" data-idx="${idx}" data-field="marks" /></label>
+    </div>`;
+}
+
+function escAttr(s) { return String(s || "").replace(/"/g, "&quot;").replace(/</g, "&lt;"); }
+function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+function addQuestion(type) {
+  showQuestionsBuilder();
+  const q = { type, question: "", marks: type === "reading" ? 5 : type === "open" ? 3 : 1 };
+  if (type === "mcq") { q.options = ["", "", "", ""]; q.correctAnswer = 0; }
+  if (type === "fill") { q.answer = ""; }
+  if (type === "reading") { q.passage = ""; q.subQuestions = [""]; }
+  if (type === "open") { q.answer = ""; }
+  assignmentQuestions.push(q);
+  renderQuestionList();
+  const card = document.querySelector(".question-card:last-child");
+  if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+document.getElementById("add-mcq-btn")?.addEventListener("click", () => addQuestion("mcq"));
+document.getElementById("add-fill-btn")?.addEventListener("click", () => addQuestion("fill"));
+document.getElementById("add-reading-btn")?.addEventListener("click", () => addQuestion("reading"));
+document.getElementById("add-open-btn")?.addEventListener("click", () => addQuestion("open"));
+
+document.getElementById("question-list")?.addEventListener("input", (e) => {
+  const el = e.target;
+  const idx = Number(el.dataset.idx);
+  const field = el.dataset.field;
+  const q = assignmentQuestions[idx];
+  if (!q || !field) return;
+  if (field === "question") q.question = el.value;
+  else if (field === "answer") q.answer = el.value;
+  else if (field === "passage") q.passage = el.value;
+  else if (field === "explanation") q.explanation = el.value;
+  else if (field === "marks") { q.marks = Number(el.value) || 0; updateQuestionCount(); }
+  else if (field === "option") { q.options[Number(el.dataset.opt)] = el.value; }
+  else if (field === "subq") {
+    if (!q.subQuestions) q.subQuestions = [];
+    q.subQuestions[Number(el.dataset.sub)] = el.value;
+  }
+});
+
+document.getElementById("question-list")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const idx = Number(btn.dataset.idx);
+
+  if (action === "delete") {
+    assignmentQuestions.splice(idx, 1);
+    renderQuestionList();
+  } else if (action === "up" && idx > 0) {
+    [assignmentQuestions[idx - 1], assignmentQuestions[idx]] = [assignmentQuestions[idx], assignmentQuestions[idx - 1]];
+    renderQuestionList();
+  } else if (action === "down" && idx < assignmentQuestions.length - 1) {
+    [assignmentQuestions[idx], assignmentQuestions[idx + 1]] = [assignmentQuestions[idx + 1], assignmentQuestions[idx]];
+    renderQuestionList();
+  } else if (action === "add-sub") {
+    const q = assignmentQuestions[idx];
+    if (q && q.type === "reading") {
+      if (!q.subQuestions) q.subQuestions = [];
+      q.subQuestions.push("");
+      renderQuestionList();
+    }
+  }
+
+  const optLetter = e.target.closest(".opt-letter");
+  if (optLetter) {
+    const qi = Number(optLetter.dataset.idx);
+    const oi = Number(optLetter.dataset.opt);
+    if (assignmentQuestions[qi]) {
+      assignmentQuestions[qi].correctAnswer = oi;
+      renderQuestionList();
+    }
+  }
+});
+
+function updateQuestionCount() {
+  const countEl = document.getElementById("question-count");
+  const totalMarks = assignmentQuestions.reduce((s, q) => s + (q.marks || 0), 0);
+  countEl.textContent = `${assignmentQuestions.length} question${assignmentQuestions.length !== 1 ? "s" : ""} · ${totalMarks} marks`;
+}
+
+document.getElementById("ai-gen-questions-btn")?.addEventListener("click", () => {
+  const subject = assignmentSubject.value;
+  assignmentQuestions = [
+    { type: "mcq", question: `Which of the following best describes Newton's First Law?`, options: ["An object accelerates when a net force acts on it", "An object at rest stays at rest unless acted upon by an external force", "Every action has an equal and opposite reaction", "Force equals mass times acceleration"], correctAnswer: 1, marks: 2, explanation: "Newton's First Law is the law of inertia." },
+    { type: "mcq", question: `What is the SI unit of energy?`, options: ["Newton", "Joule", "Watt", "Pascal"], correctAnswer: 1, marks: 2 },
+    { type: "mcq", question: `A 5 kg object has an acceleration of 3 m/s². What is the net force?`, options: ["8 N", "15 N", "2 N", "1.67 N"], correctAnswer: 1, marks: 2 },
+    { type: "fill", question: `The formula for kinetic energy is Ek = ½ × ___ × v²`, answer: "m (mass)", marks: 1 },
+    { type: "fill", question: `When a ball is thrown upward, at the highest point its velocity is ___`, answer: "zero / 0", marks: 1 },
+    { type: "fill", question: `The unit of frequency is ___, which is equivalent to s⁻¹`, answer: "Hertz / Hz", marks: 1 },
+    { type: "reading", passage: `A physics class conducted an experiment to measure the acceleration due to gravity. They dropped a steel ball from different heights (0.5 m, 1.0 m, 1.5 m, 2.0 m) and recorded the time taken to reach the ground using a photogate timer. The results showed consistent values close to 9.8 m/s², with minor variations attributed to air resistance and measurement uncertainty.`, subQuestions: ["What is the independent variable in this experiment?", "Why did the students use a steel ball instead of a paper ball?", "Calculate the expected time for the ball to fall from 2.0 m (use g = 9.8 m/s²)."], marks: 6 },
+    { type: "open", question: `Explain why astronauts experience weightlessness on the International Space Station, even though gravity still acts on them.`, answer: "They are in free fall / orbital motion provides continuous free fall — gravity provides centripetal force for orbit, not felt as weight.", marks: 5 },
+  ];
+  showQuestionsBuilder();
+  renderQuestionList();
+  const totalMarks = assignmentQuestions.reduce((s, q) => s + (q.marks || 0), 0);
+  assignmentMarks.value = totalMarks;
+  assignmentTitle.value = assignmentTitle.value || `${subject} — Practice Questions`;
+  showToast(`AI generated ${assignmentQuestions.length} questions for ${subject}`);
 });
 
 document.querySelector("#ai-generate").addEventListener("click", () => {

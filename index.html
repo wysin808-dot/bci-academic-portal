@@ -196,51 +196,145 @@
     </div>
 
     <div class="modal" id="assignment-modal" aria-hidden="true">
-      <div class="modal-card">
+      <div class="modal-card modal-card-wide">
         <div class="modal-header">
           <div>
             <p class="eyebrow">Teacher Assignment</p>
-            <h3>Assign homework to one student</h3>
+            <h3>Create Assignment</h3>
           </div>
           <button class="icon-button" id="assignment-close" type="button">×</button>
         </div>
-        <div class="form-grid">
-          <label>
-            Student
-            <select id="assignment-student">
-              <option>Loading…</option>
-            </select>
-          </label>
-          <label>
-            Subject (only your authorised subjects)
-            <select id="assignment-subject">
-              <option>Loading…</option>
-            </select>
-          </label>
+
+        <div class="assign-form-body">
+          <!-- LEFT COLUMN -->
+          <div class="assign-col">
+            <p class="subtable-title" style="margin-top:10px">Target</p>
+            <div class="scope-toggle" id="scope-toggle">
+              <button type="button" class="scope-btn active" data-scope="individual">Individual</button>
+              <button type="button" class="scope-btn" data-scope="class">Whole Class</button>
+            </div>
+            <div class="form-grid">
+              <label>
+                Subject (authorised)
+                <select id="assignment-subject">
+                  <option>Loading…</option>
+                </select>
+              </label>
+              <label id="assignment-student-label">
+                Student
+                <select id="assignment-student">
+                  <option>Loading…</option>
+                </select>
+              </label>
+              <label id="assignment-class-label" style="display:none">
+                Class
+                <select id="assignment-class">
+                  <option>Loading…</option>
+                </select>
+              </label>
+            </div>
+
+            <p class="subtable-title">Assignment Details</p>
+            <div class="form-grid">
+              <label>
+                Type
+                <select id="assignment-type">
+                  <option value="homework">Homework</option>
+                  <option value="quiz">Quiz</option>
+                  <option value="lab_report">Lab Report</option>
+                  <option value="essay">Essay</option>
+                  <option value="project">Project</option>
+                  <option value="practice_set">Practice Set</option>
+                  <option value="revision">Revision</option>
+                </select>
+              </label>
+              <label>
+                Total marks (optional)
+                <input id="assignment-marks" type="number" min="0" max="200" placeholder="e.g. 50" />
+              </label>
+            </div>
+            <label>
+              Title
+              <input id="assignment-title" type="text" placeholder="e.g. Forces & Motion — Practice Set 3" />
+            </label>
+            <label>
+              Instructions
+              <textarea id="assignment-instructions" rows="3" placeholder="Describe the task requirements, resources allowed, and expected output."></textarea>
+            </label>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="assign-col">
+            <p class="subtable-title" style="margin-top:10px">Schedule & Status</p>
+            <div class="form-grid">
+              <label>
+                Due date
+                <input id="assignment-due" type="date" />
+              </label>
+              <label>
+                Due time
+                <input id="assignment-due-time" type="time" value="23:59" />
+              </label>
+            </div>
+            <div class="form-grid">
+              <label>
+                Status
+                <select id="assignment-status">
+                  <option value="published">Publish now</option>
+                  <option value="draft">Save as draft</option>
+                  <option value="scheduled">Schedule for later</option>
+                </select>
+              </label>
+              <label id="assignment-publish-label" style="display:none">
+                Publish date
+                <input id="assignment-publish-date" type="date" />
+              </label>
+            </div>
+
+            <p class="subtable-title">WACE Alignment (optional)</p>
+            <div class="form-grid">
+              <label>
+                Assessment outline task
+                <select id="assignment-wace-task">
+                  <option value="">— None —</option>
+                </select>
+              </label>
+              <label>
+                SCSA task type
+                <select id="assignment-wace-type">
+                  <option value="">— Auto —</option>
+                  <option value="investigation">Investigation</option>
+                  <option value="response">Response</option>
+                  <option value="project">Project</option>
+                  <option value="performance">Performance</option>
+                  <option value="production">Production</option>
+                </select>
+              </label>
+            </div>
+
+            <p class="subtable-title">Resources</p>
+            <div class="attach-zone" id="assignment-attach-zone">
+              <span class="attach-icon">📎</span>
+              <span>Drop files here or <strong>browse</strong></span>
+              <input type="file" id="assignment-file" multiple style="display:none" />
+            </div>
+            <div class="attach-list" id="assignment-attach-list"></div>
+            <button class="ghost-button full" id="assignment-ai-btn" type="button" style="margin-top:8px">✦ AI Generate Practice Questions</button>
+
+            <label style="margin-top:10px">
+              Teacher note (internal)
+              <textarea id="assignment-note" rows="2" placeholder="Intervention goal, extension, or catch-up context."></textarea>
+            </label>
+          </div>
         </div>
-        <label>
-          Homework title
-          <input id="assignment-title" type="text" placeholder="Personalised practice set" />
-        </label>
-        <div class="form-grid">
-          <label>
-            Due date
-            <input id="assignment-due" type="date" />
-          </label>
-          <label>
-            Status
-            <select id="assignment-status">
-              <option>Due</option>
-              <option>Draft</option>
-            </select>
-          </label>
+
+        <div class="assign-footer">
+          <p class="modal-hint" style="margin:0">Only subjects you are authorised to teach will appear. Assignments sync to the student portal and evidence log.</p>
+          <div class="assign-footer-actions">
+            <button class="ghost-button" id="assignment-cancel" type="button">Cancel</button>
+            <button class="primary-button" id="assignment-create" type="button">Create Assignment</button>
+          </div>
         </div>
-        <label>
-          Teacher note
-          <textarea id="assignment-note" rows="4" placeholder="Add intervention goal, extension task, or catch-up instruction."></textarea>
-        </label>
-        <p class="modal-hint">Only subjects authorised for teacher assignment can be created.</p>
-        <button class="primary-button full" id="assignment-create" type="button">Create individual assignment</button>
       </div>
     </div>
 

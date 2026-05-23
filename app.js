@@ -296,10 +296,19 @@ const qrLink = document.querySelector("#qr-link");
 const assignmentModal = document.querySelector("#assignment-modal");
 const assignmentStudent = document.querySelector("#assignment-student");
 const assignmentSubject = document.querySelector("#assignment-subject");
+const assignmentClass = document.querySelector("#assignment-class");
+const assignmentType = document.querySelector("#assignment-type");
 const assignmentTitle = document.querySelector("#assignment-title");
+const assignmentInstructions = document.querySelector("#assignment-instructions");
+const assignmentMarks = document.querySelector("#assignment-marks");
 const assignmentDue = document.querySelector("#assignment-due");
+const assignmentDueTime = document.querySelector("#assignment-due-time");
 const assignmentStatus = document.querySelector("#assignment-status");
 const assignmentNote = document.querySelector("#assignment-note");
+const assignmentWaceTask = document.querySelector("#assignment-wace-task");
+const assignmentWaceType = document.querySelector("#assignment-wace-type");
+let assignmentScope = "individual";
+let assignmentAttachedFiles = [];
 const STORAGE_KEY = "bci-academic-portal-state-v2";
 const STATE_SCHEMA_VERSION = 5;
 const CURRENT_STUDENT_NAME = "Amanda Lee";
@@ -1432,9 +1441,19 @@ function openQrModal() {
 
 async function openAssignmentModal() {
   assignmentTitle.value = "";
+  assignmentInstructions.value = "";
+  assignmentMarks.value = "";
   assignmentDue.value = dateInputValue(1);
-  assignmentStatus.value = "Due";
+  assignmentDueTime.value = "23:59";
+  assignmentStatus.value = "published";
+  assignmentType.value = "homework";
   assignmentNote.value = "";
+  assignmentWaceTask.innerHTML = '<option value="">— None —</option>';
+  assignmentWaceType.value = "";
+  assignmentAttachedFiles = [];
+  document.getElementById("assignment-attach-list").innerHTML = "";
+  document.getElementById("assignment-publish-label").style.display = "none";
+  setAssignmentScope("individual");
 
   let populated = false;
   if (cloudConfigured()) {
@@ -1473,9 +1492,44 @@ async function openAssignmentModal() {
     }
   }
 
+  populateAssignmentClasses();
+  populateWaceTasks();
+
   assignmentModal.classList.add("active");
   assignmentModal.setAttribute("aria-hidden", "false");
   assignmentTitle.focus();
+}
+
+function setAssignmentScope(scope) {
+  assignmentScope = scope;
+  document.querySelectorAll(".scope-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.scope === scope);
+  });
+  document.getElementById("assignment-student-label").style.display = scope === "individual" ? "" : "none";
+  document.getElementById("assignment-class-label").style.display = scope === "class" ? "" : "none";
+}
+
+function populateAssignmentClasses() {
+  const classes = [...new Set(appState.assignments.filter((a) => a.className).map((a) => a.className))];
+  const timetableClasses = [...new Set(appState.studentTimetables.map((t) => `Y${t.year.replace("Year ", "")} ${t.subject}`))];
+  const allClasses = [...new Set([...classes, ...timetableClasses])].sort();
+  if (allClasses.length) {
+    assignmentClass.innerHTML = allClasses.map((c) => `<option value="${c}">${c}</option>`).join("");
+  } else {
+    assignmentClass.innerHTML = '<option>Y11 Physics</option><option>Y11 EALD</option><option>Y11 Maths Methods</option><option>Y12 Chemistry</option>';
+  }
+}
+
+function populateWaceTasks() {
+  const subject = assignmentSubject.value;
+  const outlines = appState.waceOutlines?.filter((o) => o.course === subject) || [];
+  let html = '<option value="">— None —</option>';
+  outlines.forEach((o) => {
+    (o.tasks || []).forEach((t) => {
+      html += `<option value="${o.id}:${t.id}">${o.year} ${o.semester} · ${t.type} (${t.weight}%)</option>`;
+    });
+  });
+  assignmentWaceTask.innerHTML = html;
 }
 
 function closeAssignmentModal() {
@@ -1484,22 +1538,35 @@ function closeAssignmentModal() {
 }
 
 async function createIndividualAssignmentFromModal() {
-  const student = assignmentStudent.value;
+  const scope = assignmentScope;
+  const student = scope === "individual" ? assignmentStudent.value : "";
+  const className = scope === "class" ? assignmentClass.value : "";
   const subject = assignmentSubject.value;
+  const type = assignmentType.value;
   const title = assignmentTitle.value.trim();
+  const instructions = assignmentInstructions.value.trim();
+  const marks = assignmentMarks.value ? Number(assignmentMarks.value) : null;
   const due = displayDateFromInput(assignmentDue.value);
-  const status = assignmentStatus.value;
+  const dueTime = assignmentDueTime.value || "23:59";
+  const statusVal = assignmentStatus.value;
+  const status = statusVal === "draft" ? "Draft" : "Due";
   const note = assignmentNote.value.trim();
+  const waceTaskRef = assignmentWaceTask.value;
+  const waceType = assignmentWaceType.value;
   const permission = appState.teacherSubjects.find((item) => item.subject === subject);
 
   if (!title) {
-    showToast("Please enter a homework title");
+    showToast("Please enter a title");
     assignmentTitle.focus();
     return;
   }
   if (!assignmentDue.value) {
     showToast("Please choose a due date");
     assignmentDue.focus();
+    return;
+  }
+  if (scope === "individual" && !student) {
+    showToast("Please select a student");
     return;
   }
   if (!teacherCan(subject, "assign")) {
@@ -1509,27 +1576,35 @@ async function createIndividualAssignmentFromModal() {
 
   const assignment = {
     id: `a${Date.now()}`,
-    scope: "Individual",
+    scope: scope === "class" ? "Class" : "Individual",
     student,
-    className: "",
+    className,
     subject,
     title,
-    due,
+    type,
+    instructions,
+    marks,
+    due: `${due} ${dueTime}`,
     status,
     score: "",
     assignedBy: permission?.teacher || "Teacher",
     note,
+    waceTaskRef,
+    waceType,
+    attachments: assignmentAttachedFiles.map((f) => f.name),
   };
 
-  if (cloudConfigured()) {
+  const target = scope === "class" ? className : student;
+
+  if (cloudConfigured() && scope === "individual") {
     try {
       const cloudResult = await window.AcademicDataAdapter.createIndividualAssignment({
         studentName: student,
         subjectName: subject,
         title,
-        description: note,
+        description: instructions || note,
         dueAt: isoFromDateInput(assignmentDue.value),
-        status,
+        status: statusVal,
       });
       assignment.id = cloudResult.assignment.id;
       assignment.cloudAssignmentId = cloudResult.assignment.id;
@@ -1546,7 +1621,7 @@ async function createIndividualAssignmentFromModal() {
   appState.evidence.push({
     id: `e${Date.now()}`,
     type: "Assignment",
-    item: `${subject} individual homework created for ${student}`,
+    item: `${subject} ${type} ${scope === "class" ? "assigned to " + className : "created for " + student}`,
     owner: permission?.teacher || "Teacher",
     status: "Complete",
   });
@@ -1554,9 +1629,9 @@ async function createIndividualAssignmentFromModal() {
   closeAssignmentModal();
   renderPortal(currentRole, currentModule);
   if (assignment.cloudSynced) {
-    showToast(`Homework assigned to ${student} and saved to database`);
-  } else if (!cloudConfigured()) {
-    showToast(`Homework assigned to ${student}`);
+    showToast(`${type} assigned to ${target} and saved to database`);
+  } else {
+    showToast(`${type} assigned to ${target}`);
   }
 }
 
@@ -1571,8 +1646,56 @@ document.querySelector("#qr-close").addEventListener("click", () => {
 });
 
 document.querySelector("#assignment-close").addEventListener("click", closeAssignmentModal);
+document.querySelector("#assignment-cancel")?.addEventListener("click", closeAssignmentModal);
 
 document.querySelector("#assignment-create").addEventListener("click", createIndividualAssignmentFromModal);
+
+document.getElementById("scope-toggle")?.addEventListener("click", (e) => {
+  const btn = e.target.closest(".scope-btn");
+  if (btn) setAssignmentScope(btn.dataset.scope);
+});
+
+assignmentSubject?.addEventListener("change", () => populateWaceTasks());
+
+assignmentStatus?.addEventListener("change", () => {
+  const show = assignmentStatus.value === "scheduled";
+  document.getElementById("assignment-publish-label").style.display = show ? "" : "none";
+});
+
+document.getElementById("assignment-attach-zone")?.addEventListener("click", () => {
+  document.getElementById("assignment-file")?.click();
+});
+
+document.getElementById("assignment-file")?.addEventListener("change", (e) => {
+  const files = Array.from(e.target.files || []);
+  files.forEach((f) => assignmentAttachedFiles.push(f));
+  renderAttachList();
+  e.target.value = "";
+});
+
+function renderAttachList() {
+  const list = document.getElementById("assignment-attach-list");
+  list.innerHTML = assignmentAttachedFiles.map((f, i) =>
+    `<span class="attach-chip">${f.name} <button type="button" data-idx="${i}">×</button></span>`
+  ).join("");
+}
+
+document.getElementById("assignment-attach-list")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-idx]");
+  if (btn) {
+    assignmentAttachedFiles.splice(Number(btn.dataset.idx), 1);
+    renderAttachList();
+  }
+});
+
+document.getElementById("assignment-ai-btn")?.addEventListener("click", () => {
+  const subject = assignmentSubject.value;
+  const type = assignmentType.value;
+  const typeLabel = assignmentType.options[assignmentType.selectedIndex]?.text || type;
+  assignmentTitle.value = assignmentTitle.value || `${subject} — AI-Generated ${typeLabel}`;
+  assignmentInstructions.value = `AI-generated ${typeLabel.toLowerCase()} for ${subject}.\n\nThis practice set covers key topics from recent lessons. Students should attempt all questions independently before checking answers.\n\nEstimated time: 30–45 minutes.`;
+  showToast(`AI practice content generated for ${subject}`);
+});
 
 document.querySelector("#ai-generate").addEventListener("click", () => {
   const subject = document.querySelector("#ai-subject").value;

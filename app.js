@@ -1155,6 +1155,42 @@ function buildModuleView(role, moduleName) {
     };
   }
 
+  if (moduleName === "Students") {
+    const students = appState._cloudStudents || [];
+    return {
+      ...dashboard,
+      heroTitle: `${students.length} students enrolled.`,
+      heroCopy: "Manage student accounts, enrolment status and year levels.",
+      primaryEyebrow: "Student Management",
+      primaryTitle: "All Students",
+      primaryAction: "Add student",
+      primary: students.map((s) => [s.student_code || "—", s.full_name, `${s.year_level} · ${s.programme}`, s.enrollment_status || "active"]),
+      insightTitle: "Enrolment",
+      insight: ["Cloud-synced", "Student records are stored in Supabase. New students get an auth account, profile, and academic record in one step."],
+      tableTitle: "Student Register",
+      tableHead: ["Code", "Name", "Year / Programme", "Status"],
+      table: students.map((s) => [s.student_code || "—", s.full_name, `${s.year_level} · ${s.programme}`, s.enrollment_status || "active"]),
+    };
+  }
+
+  if (moduleName === "Teachers") {
+    const teachers = appState._cloudTeachers || [];
+    return {
+      ...dashboard,
+      heroTitle: `${teachers.length} teachers on staff.`,
+      heroCopy: "Manage teacher accounts, departments and subject authorisations.",
+      primaryEyebrow: "Teacher Management",
+      primaryTitle: "All Teachers",
+      primaryAction: "Add teacher",
+      primary: teachers.map((t) => [t.department || "—", t.full_name, t.department || "General", t.status || "active"]),
+      insightTitle: "Subject Access",
+      insight: ["Permission-based", "Teachers can only create assignments and enter marks for subjects they are authorised to teach."],
+      tableTitle: "Teacher Register",
+      tableHead: ["Name", "Department", "Status", "Actions"],
+      table: teachers.map((t) => [t.full_name, t.department || "—", t.status || "active", "View"]),
+    };
+  }
+
   return dashboard;
 }
 
@@ -1245,6 +1281,9 @@ function renderPortal(role, moduleIndex = currentModule) {
 
 async function handlePrimaryAction() {
   const moduleName = portalData[currentRole].nav[currentModule];
+
+  if (moduleName === "Students") { openAddStudentModal(); return; }
+  if (moduleName === "Teachers") { openAddTeacherModal(); return; }
 
   if (moduleName.includes("AI")) {
     aiModal.classList.add("active");
@@ -1364,10 +1403,15 @@ roleSelect.addEventListener("change", () => {
   renderPortal(roleSelect.value, 0);
 });
 
-navList.addEventListener("click", (event) => {
+navList.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-module]");
   if (!button) return;
-  renderPortal(currentRole, Number(button.dataset.module));
+  const idx = Number(button.dataset.module);
+  const moduleName = portalData[currentRole]?.nav?.[idx];
+  if (moduleName === "Students" || moduleName === "Teachers") {
+    await loadCloudLists();
+  }
+  renderPortal(currentRole, idx);
 });
 
 primaryAction.addEventListener("click", handlePrimaryAction);
@@ -1825,3 +1869,106 @@ if (loginSignout) loginSignout.addEventListener("click", async () => {
     await bootstrapCloudRole();
   }
 })();
+
+// ── Admin: Add Student / Teacher ─────────────────────────
+
+const addStudentModal = document.getElementById("add-student-modal");
+const addTeacherModal = document.getElementById("add-teacher-modal");
+
+async function loadCloudLists() {
+  try {
+    const [students, teachers] = await Promise.all([
+      window.AcademicDataAdapter.listStudents(),
+      window.AcademicDataAdapter.listTeachers(),
+    ]);
+    appState._cloudStudents = students;
+    appState._cloudTeachers = teachers;
+  } catch (e) {
+    console.warn("Failed to load cloud lists:", e);
+  }
+}
+
+function openAddStudentModal() {
+  document.getElementById("add-student-name").value = "";
+  document.getElementById("add-student-email").value = "";
+  document.getElementById("add-student-password").value = "BCI2025test";
+  document.getElementById("add-student-error").textContent = "";
+  addStudentModal.classList.add("active");
+}
+
+async function openAddTeacherModal() {
+  document.getElementById("add-teacher-name").value = "";
+  document.getElementById("add-teacher-email").value = "";
+  document.getElementById("add-teacher-password").value = "BCI2025test";
+  document.getElementById("add-teacher-error").textContent = "";
+  const subjectsGrid = document.getElementById("add-teacher-subjects");
+  if (subjectsGrid) {
+    if (!appState._cloudSubjects?.length) {
+      appState._cloudSubjects = await window.AcademicDataAdapter.listSubjects();
+    }
+    subjectsGrid.innerHTML = (appState._cloudSubjects || []).map((s) =>
+      `<label><input type="checkbox" value="${s.id}" /> ${s.name}</label>`
+    ).join("");
+  }
+  addTeacherModal.classList.add("active");
+}
+
+document.getElementById("add-student-close")?.addEventListener("click", () => addStudentModal.classList.remove("active"));
+document.getElementById("add-teacher-close")?.addEventListener("click", () => addTeacherModal.classList.remove("active"));
+addStudentModal?.addEventListener("click", (e) => { if (e.target === addStudentModal) addStudentModal.classList.remove("active"); });
+addTeacherModal?.addEventListener("click", (e) => { if (e.target === addTeacherModal) addTeacherModal.classList.remove("active"); });
+
+document.getElementById("add-student-submit")?.addEventListener("click", async () => {
+  const name = document.getElementById("add-student-name").value.trim();
+  const email = document.getElementById("add-student-email").value.trim();
+  const password = document.getElementById("add-student-password").value;
+  const year = document.getElementById("add-student-year").value;
+  const errorEl = document.getElementById("add-student-error");
+  if (!name || !email) { errorEl.textContent = "Name and email are required"; return; }
+
+  const btn = document.getElementById("add-student-submit");
+  btn.disabled = true;
+  btn.textContent = "Creating...";
+  try {
+    await window.AcademicDataAdapter.adminCreateStudent({ email, password, fullName: name, yearLevel: year });
+    addStudentModal.classList.remove("active");
+    showToast(`Student ${name} created`);
+    await loadCloudLists();
+    renderPortal(currentRole, currentModule);
+  } catch (err) {
+    errorEl.textContent = err.message || "Failed to create student";
+    errorEl.style.color = "var(--danger, #e53e3e)";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Create student account";
+  }
+});
+
+document.getElementById("add-teacher-submit")?.addEventListener("click", async () => {
+  const name = document.getElementById("add-teacher-name").value.trim();
+  const email = document.getElementById("add-teacher-email").value.trim();
+  const password = document.getElementById("add-teacher-password").value;
+  const dept = document.getElementById("add-teacher-dept").value;
+  const checkedBoxes = document.querySelectorAll("#add-teacher-subjects input:checked");
+  const subjectIds = Array.from(checkedBoxes).map((cb) => cb.value);
+  const errorEl = document.getElementById("add-teacher-error");
+  if (!name || !email) { errorEl.textContent = "Name and email are required"; return; }
+
+  const btn = document.getElementById("add-teacher-submit");
+  btn.disabled = true;
+  btn.textContent = "Creating...";
+  try {
+    await window.AcademicDataAdapter.adminCreateTeacher({ email, password, fullName: name, department: dept, subjectIds });
+    addTeacherModal.classList.remove("active");
+    showToast(`Teacher ${name} created`);
+    await loadCloudLists();
+    renderPortal(currentRole, currentModule);
+  } catch (err) {
+    errorEl.textContent = err.message || "Failed to create teacher";
+    errorEl.style.color = "var(--danger, #e53e3e)";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Create teacher account";
+  }
+});
+

@@ -294,10 +294,91 @@
       </div>
     </div>
 
+    <div class="modal" id="add-student-modal" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h3>Add New Student</h3>
+          </div>
+          <button class="icon-button" id="add-student-close" type="button">×</button>
+        </div>
+        <div class="form-grid">
+          <label>
+            Full name
+            <input id="add-student-name" type="text" placeholder="e.g. Sophie Wang" />
+          </label>
+          <label>
+            Email
+            <input id="add-student-email" type="email" placeholder="e.g. sophie.wang@student.bci.edu.sg" />
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>
+            Password
+            <input id="add-student-password" type="text" value="BCI2025test" />
+          </label>
+          <label>
+            Year level
+            <select id="add-student-year">
+              <option>Year 10</option>
+              <option selected>Year 11</option>
+              <option>Year 12</option>
+            </select>
+          </label>
+        </div>
+        <p class="modal-hint" id="add-student-error"></p>
+        <button class="primary-button full" id="add-student-submit" type="button">Create student account</button>
+      </div>
+    </div>
+
+    <div class="modal" id="add-teacher-modal" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Admin</p>
+            <h3>Add New Teacher</h3>
+          </div>
+          <button class="icon-button" id="add-teacher-close" type="button">×</button>
+        </div>
+        <div class="form-grid">
+          <label>
+            Full name
+            <input id="add-teacher-name" type="text" placeholder="e.g. Dr. Alex Kim" />
+          </label>
+          <label>
+            Email
+            <input id="add-teacher-email" type="email" placeholder="e.g. alex.kim@bci.edu.sg" />
+          </label>
+        </div>
+        <div class="form-grid">
+          <label>
+            Password
+            <input id="add-teacher-password" type="text" value="BCI2025test" />
+          </label>
+          <label>
+            Department
+            <select id="add-teacher-dept">
+              <option>Sciences</option>
+              <option>Mathematics</option>
+              <option>Humanities & English</option>
+              <option>Business & IT</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          Authorised subjects
+          <div class="checkbox-grid" id="add-teacher-subjects"></div>
+        </label>
+        <p class="modal-hint" id="add-teacher-error"></p>
+        <button class="primary-button full" id="add-teacher-submit" type="button">Create teacher account</button>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
     <script src="./data-adapter.js"></script>
-    <script src="./app.js?v=11"></script>
+    <script src="./app.js?v=12"></script>
   </body>
 </html>

@@ -274,13 +274,70 @@ async function saveRubric({ id, assignmentId, outlineId, title, totalMarks, crit
   return rubric;
 }
 
+async function adminCreateStudent({ email, password, fullName, yearLevel, programme }) {
+  const client = createAcademicClient();
+  if (!client) return null;
+  const { data, error } = await client.rpc("admin_create_student", {
+    p_email: email,
+    p_password: password,
+    p_full_name: fullName,
+    p_year_level: yearLevel || "Year 11",
+    p_programme: programme || "WACE",
+  });
+  if (error) throw error;
+  return data;
+}
+
+async function adminCreateTeacher({ email, password, fullName, department, subjectIds }) {
+  const client = createAcademicClient();
+  if (!client) return null;
+  const { data, error } = await client.rpc("admin_create_teacher", {
+    p_email: email,
+    p_password: password,
+    p_full_name: fullName,
+    p_department: department || "",
+    p_subject_ids: subjectIds || [],
+  });
+  if (error) throw error;
+  return data;
+}
+
+async function listStudents() {
+  const client = createAcademicClient();
+  if (!client) return [];
+  const { data, error } = await client.from("students").select("id, student_code, full_name, year_level, programme, enrollment_status").order("full_name");
+  if (error) throw error;
+  return data || [];
+}
+
+async function listTeachers() {
+  const client = createAcademicClient();
+  if (!client) return [];
+  const { data, error } = await client.from("teachers").select("id, full_name, department, status").order("full_name");
+  if (error) throw error;
+  return data || [];
+}
+
+async function listSubjects() {
+  const client = createAcademicClient();
+  if (!client) return [];
+  const { data, error } = await client.from("subjects").select("id, code, name, list_type, hemisphere").eq("status", "active").order("name");
+  if (error) throw error;
+  return data || [];
+}
+
 window.AcademicDataAdapter = {
+  adminCreateStudent,
+  adminCreateTeacher,
   createAcademicClient,
   createIndividualAssignment,
   createTeacherWithSubjects,
   getConfigStatus,
   hasSupabaseConfig,
   getMyPortalRole,
+  listStudents,
+  listSubjects,
+  listTeachers,
   loadRoleBackend,
   loadRubric,
   mapBackendToPrototypeState,

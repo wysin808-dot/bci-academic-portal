@@ -653,10 +653,10 @@ const BCI_APPROVED_SUBJECTS = [
   { code: "AEMAM", name: "Mathematics Methods", list: "B", hemisphere: "NH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [35, 45] }, { type: "Investigation", weight: [15, 25] }, { type: "Examination", weight: [35, 45] }] },
   { code: "AEPHY", name: "Physics", list: "B", hemisphere: "NH", courseType: "ATAR", atarTypes: [{ type: "Investigation", weight: [15, 25] }, { type: "Test", weight: [25, 35] }, { type: "Examination", weight: [40, 55] }] },
   { code: "AEPSY", name: "Psychology", list: "A", hemisphere: "NH", courseType: "ATAR", atarTypes: [{ type: "Investigation", weight: [15, 25] }, { type: "Response", weight: [25, 35] }, { type: "Examination", weight: [40, 50] }] },
-  { code: "AEAIT", name: "Applied Information Technology", list: "B", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Practical", weight: [25, 35] }, { type: "Response", weight: [25, 35] }, { type: "Examination", weight: [35, 45] }] },
+  { code: "AEAIT", name: "Applied Information Technology", list: "B", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Practical", weight: [25, 35] }, { type: "Response", weight: [20, 30] }, { type: "Examination", weight: [35, 45] }] },
   { code: "AEBLY", name: "Biology", list: "B", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Investigation", weight: [15, 25] }, { type: "Test", weight: [25, 35] }, { type: "Examination", weight: [40, 55] }] },
-  { code: "AECFL", name: "Chinese: First Language", list: "A", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [25, 35] }, { type: "Production", weight: [25, 35] }, { type: "Examination", weight: [35, 45] }] },
-  { code: "AECSL", name: "Chinese: Second Language", list: "A", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [25, 35] }, { type: "Production", weight: [25, 35] }, { type: "Examination", weight: [35, 45] }] },
+  { code: "AECFL", name: "Chinese: First Language", list: "A", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [25, 35] }, { type: "Oral", weight: [15, 25] }, { type: "Examination", weight: [40, 50] }] },
+  { code: "AECSL", name: "Chinese: Second Language", list: "A", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [25, 35] }, { type: "Oral", weight: [15, 25] }, { type: "Examination", weight: [40, 50] }] },
   { code: "AEMAS", name: "Mathematics Specialist", list: "B", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [35, 45] }, { type: "Investigation", weight: [15, 25] }, { type: "Examination", weight: [35, 45] }] },
 ];
 

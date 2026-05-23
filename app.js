@@ -1960,11 +1960,13 @@ document.getElementById("add-teacher-submit")?.addEventListener("click", async (
   const name = document.getElementById("add-teacher-name").value.trim();
   const email = document.getElementById("add-teacher-email").value.trim();
   const password = document.getElementById("add-teacher-password").value;
-  const dept = document.getElementById("add-teacher-dept").value;
   const checkedBoxes = document.querySelectorAll("#add-teacher-subjects input:checked");
   const subjectIds = Array.from(checkedBoxes).map((cb) => cb.value);
+  const subjectNames = Array.from(checkedBoxes).map((cb) => cb.parentElement.textContent.trim());
+  const dept = subjectNames.join(", ");
   const errorEl = document.getElementById("add-teacher-error");
   if (!name || !email) { errorEl.textContent = "Name and email are required"; return; }
+  if (subjectIds.length === 0) { errorEl.textContent = "Please select at least one subject"; return; }
 
   const btn = document.getElementById("add-teacher-submit");
   btn.disabled = true;

@@ -1446,7 +1446,7 @@ async function openAssignmentModal() {
   assignmentDue.value = dateInputValue(1);
   assignmentDueTime.value = "23:59";
   assignmentStatus.value = "published";
-  assignmentType.value = "homework";
+  assignmentType.value = "worksheet";
   assignmentNote.value = "";
   assignmentWaceTask.innerHTML = '<option value="">— None —</option>';
   assignmentWaceType.value = "";
@@ -1459,6 +1459,12 @@ async function openAssignmentModal() {
   document.getElementById("question-count").textContent = "0 questions · 0 marks";
   document.getElementById("essay-builder").style.display = "none";
   resetEssayBuilder();
+  hideAllTypePanels();
+  resetPracticalBuilder();
+  resetProjectBuilder();
+  resetPresentationBuilder();
+  resetExamBuilder();
+  resetReflectionBuilder();
   setAssignmentScope("individual");
 
   let populated = false;
@@ -1614,6 +1620,11 @@ async function createIndividualAssignmentFromModal() {
       },
       rubric: [...essayRubricCriteria],
     } : undefined,
+    practical: type === "practical" ? collectPracticalData() : undefined,
+    project: type === "project" ? collectProjectData() : undefined,
+    presentation: type === "presentation" ? collectPresentationData() : undefined,
+    exam: type === "exam" ? collectExamData() : undefined,
+    reflection: type === "reflection" ? collectReflectionData() : undefined,
   };
 
   const target = scope === "class" ? className : student;
@@ -1728,15 +1739,44 @@ const questionTypeBadge = { mcq: "MCQ", multi: "Multi", fill: "Fill", reading: "
 function showQuestionsBuilder() {
   const builder = document.getElementById("questions-builder");
   if (builder) builder.style.display = "";
+  hideAllTypePanels();
+}
+
+const typePanelIds = ["practical-builder", "project-builder", "presentation-builder", "exam-builder", "reflection-builder"];
+
+function hideAllTypePanels() {
+  typePanelIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = "none";
+  });
+}
+
+function showTypePanel(panelId) {
+  hideAllTypePanels();
+  document.getElementById("questions-builder").style.display = "none";
+  hideEssayBuilder();
+  const el = document.getElementById(panelId);
+  if (el) el.style.display = "";
 }
 
 assignmentType?.addEventListener("change", () => {
   const type = assignmentType.value;
+  hideAllTypePanels();
   if (type === "essay") {
     showEssayBuilder();
-  } else if (["homework", "quiz", "practice_set", "revision"].includes(type)) {
+  } else if (["worksheet", "quiz"].includes(type)) {
     hideEssayBuilder();
     showQuestionsBuilder();
+  } else if (type === "practical") {
+    showTypePanel("practical-builder");
+  } else if (type === "project") {
+    showTypePanel("project-builder");
+  } else if (type === "presentation") {
+    showTypePanel("presentation-builder");
+  } else if (type === "exam") {
+    showTypePanel("exam-builder");
+  } else if (type === "reflection") {
+    showTypePanel("reflection-builder");
   } else {
     document.getElementById("questions-builder").style.display = "none";
     hideEssayBuilder();
@@ -2066,6 +2106,7 @@ document.getElementById("ai-gen-essay-btn")?.addEventListener("click", () => {
 function showEssayBuilder() {
   document.getElementById("essay-builder").style.display = "";
   document.getElementById("questions-builder").style.display = "none";
+  hideAllTypePanels();
 }
 
 function hideEssayBuilder() {
@@ -2084,12 +2125,197 @@ function resetEssayBuilder() {
   document.getElementById("outline-intro").value = "";
   document.getElementById("outline-conclusion").value = "";
   document.getElementById("outline-body-list").innerHTML =
-    ‘<input type="text" class="outline-body-input" placeholder="Body ¶1: Topic sentence + evidence + analysis" />’ +
-    ‘<input type="text" class="outline-body-input" placeholder="Body ¶2: Counter-argument or second point" />’ +
-    ‘<input type="text" class="outline-body-input" placeholder="Body ¶3: Supporting evidence or third point" />’;
+    '<input type="text" class="outline-body-input" placeholder="Body P1: Topic sentence + evidence + analysis" />' +
+    '<input type="text" class="outline-body-input" placeholder="Body P2: Counter-argument or second point" />' +
+    '<input type="text" class="outline-body-input" placeholder="Body P3: Supporting evidence or third point" />';
   document.getElementById("essay-rubric-list").innerHTML = "";
   document.getElementById("essay-total-marks").textContent = "0 marks";
 }
+
+// ── Type-specific panel logic ────────────────────────────────
+
+function resetPracticalBuilder() {
+  const el = (id) => document.getElementById(id);
+  if (el("prac-aim")) el("prac-aim").value = "";
+  if (el("prac-hypothesis")) el("prac-hypothesis").value = "";
+  if (el("prac-method")) el("prac-method").value = "";
+  if (el("prac-data-table")) el("prac-data-table").value = "yes";
+  if (el("prac-graph")) el("prac-graph").value = "yes";
+  if (el("prac-conclusion")) el("prac-conclusion").value = "";
+  if (el("prac-safety")) el("prac-safety").value = "";
+  if (el("prac-room")) el("prac-room").selectedIndex = 0;
+}
+
+function collectPracticalData() {
+  return {
+    aim: document.getElementById("prac-aim")?.value || "",
+    hypothesis: document.getElementById("prac-hypothesis")?.value || "",
+    method: document.getElementById("prac-method")?.value || "",
+    dataTable: document.getElementById("prac-data-table")?.value || "yes",
+    graph: document.getElementById("prac-graph")?.value || "yes",
+    conclusion: document.getElementById("prac-conclusion")?.value || "",
+    safety: document.getElementById("prac-safety")?.value || "",
+    room: document.getElementById("prac-room")?.value || "",
+  };
+}
+
+document.getElementById("ai-gen-prac-btn")?.addEventListener("click", () => {
+  const subject = assignmentSubject.value;
+  document.getElementById("prac-aim").value = `Investigate the effect of temperature on the rate of reaction in ${subject}`;
+  document.getElementById("prac-hypothesis").value = "If temperature increases, then the rate of reaction will increase due to higher kinetic energy of particles";
+  document.getElementById("prac-method").value = "Equipment: 250ml beakers, thermometer, stopwatch, hydrochloric acid, sodium thiosulfate\n\n1. Prepare 50ml sodium thiosulfate solution in a beaker\n2. Heat to target temperature (20°C, 30°C, 40°C, 50°C, 60°C)\n3. Add 10ml hydrochloric acid and start stopwatch\n4. Record time for cross beneath beaker to disappear\n5. Repeat each temperature 3 times for reliability";
+  document.getElementById("prac-conclusion").value = "Analyse the relationship between temperature and reaction time. Discuss sources of error and suggest improvements.";
+  document.getElementById("prac-safety").value = "Wear safety goggles and gloves. Handle acid with care. Ensure adequate ventilation.";
+  assignmentTitle.value = assignmentTitle.value || `${subject} — Practical Investigation`;
+  showToast(`AI generated practical template for ${subject}`);
+});
+
+function resetProjectBuilder() {
+  const el = (id) => document.getElementById(id);
+  if (el("proj-mode")) el("proj-mode").value = "individual";
+  if (el("proj-group-size")) el("proj-group-size").value = "4";
+  if (el("proj-deliverables")) el("proj-deliverables").value = "";
+  const list = document.getElementById("proj-milestones");
+  if (list) {
+    list.innerHTML = [
+      ["Proposal / Topic Selection", ""],
+      ["Research & Data Collection", ""],
+      ["Draft / Prototype", ""],
+      ["Final Submission & Presentation", ""],
+    ].map((m, i) =>
+      `<div class="milestone-row"><span class="milestone-num">${i + 1}</span><input type="text" class="milestone-input" placeholder="${m[0]}" /><input type="date" class="milestone-date" /></div>`
+    ).join("");
+  }
+}
+
+function collectProjectData() {
+  const milestones = Array.from(document.querySelectorAll("#proj-milestones .milestone-row")).map((row) => ({
+    name: row.querySelector(".milestone-input")?.value || "",
+    date: row.querySelector(".milestone-date")?.value || "",
+  })).filter((m) => m.name);
+  return {
+    mode: document.getElementById("proj-mode")?.value || "individual",
+    groupSize: Number(document.getElementById("proj-group-size")?.value) || 4,
+    milestones,
+    deliverables: document.getElementById("proj-deliverables")?.value || "",
+  };
+}
+
+document.getElementById("add-milestone-btn")?.addEventListener("click", () => {
+  const list = document.getElementById("proj-milestones");
+  const count = list.querySelectorAll(".milestone-row").length + 1;
+  const row = document.createElement("div");
+  row.className = "milestone-row";
+  row.innerHTML = `<span class="milestone-num">${count}</span><input type="text" class="milestone-input" placeholder="Milestone ${count}" /><input type="date" class="milestone-date" />`;
+  list.appendChild(row);
+});
+
+function collectPresentationData() {
+  const selectedFiles = Array.from(document.getElementById("pres-files")?.selectedOptions || []).map((o) => o.text);
+  return {
+    format: document.getElementById("pres-format")?.value || "live",
+    minMinutes: Number(document.getElementById("pres-min-min")?.value) || 3,
+    maxMinutes: Number(document.getElementById("pres-max-min")?.value) || 8,
+    acceptedFiles: selectedFiles,
+    criteria: document.getElementById("pres-criteria")?.value || "",
+    topic: document.getElementById("pres-topic")?.value || "",
+  };
+}
+
+function resetPresentationBuilder() {
+  const el = (id) => document.getElementById(id);
+  if (el("pres-format")) el("pres-format").value = "live";
+  if (el("pres-min-min")) el("pres-min-min").value = "3";
+  if (el("pres-max-min")) el("pres-max-min").value = "8";
+  if (el("pres-criteria")) el("pres-criteria").value = "";
+  if (el("pres-topic")) el("pres-topic").value = "";
+  const filesEl = document.getElementById("pres-files");
+  if (filesEl) Array.from(filesEl.options).forEach((o, i) => { o.selected = i < 2; });
+}
+
+function collectExamData() {
+  return {
+    examType: document.getElementById("exam-type")?.value || "class_test",
+    duration: Number(document.getElementById("exam-duration")?.value) || 120,
+    openTime: document.getElementById("exam-open")?.value || "",
+    closeTime: document.getElementById("exam-close")?.value || "",
+    materials: document.getElementById("exam-materials")?.value || "closed",
+    lock: document.getElementById("exam-lock")?.value || "auto",
+    shuffle: document.getElementById("exam-shuffle")?.checked || false,
+    onePage: document.getElementById("exam-one-page")?.checked || false,
+    noBack: document.getElementById("exam-no-back")?.checked || false,
+    monitor: document.getElementById("exam-monitor")?.checked || false,
+  };
+}
+
+function resetExamBuilder() {
+  const el = (id) => document.getElementById(id);
+  if (el("exam-type")) el("exam-type").value = "class_test";
+  if (el("exam-duration")) el("exam-duration").value = "120";
+  if (el("exam-open")) el("exam-open").value = "";
+  if (el("exam-close")) el("exam-close").value = "";
+  if (el("exam-materials")) el("exam-materials").value = "closed";
+  if (el("exam-lock")) el("exam-lock").value = "auto";
+  if (el("exam-shuffle")) el("exam-shuffle").checked = false;
+  if (el("exam-one-page")) el("exam-one-page").checked = false;
+  if (el("exam-no-back")) el("exam-no-back").checked = false;
+  if (el("exam-monitor")) el("exam-monitor").checked = false;
+}
+
+function collectReflectionData() {
+  const prompts = Array.from(document.querySelectorAll("#reflect-prompts .reflect-prompt-input")).map((el) => el.value).filter(Boolean);
+  return {
+    reflectionType: document.getElementById("reflect-type")?.value || "learning",
+    frequency: document.getElementById("reflect-freq")?.value || "once",
+    prompts,
+    visibility: document.getElementById("reflect-visibility")?.value || "teacher",
+    minWords: Number(document.getElementById("reflect-min-words")?.value) || 100,
+  };
+}
+
+function resetReflectionBuilder() {
+  const el = (id) => document.getElementById(id);
+  if (el("reflect-type")) el("reflect-type").value = "learning";
+  if (el("reflect-freq")) el("reflect-freq").value = "once";
+  if (el("reflect-visibility")) el("reflect-visibility").value = "teacher";
+  if (el("reflect-min-words")) el("reflect-min-words").value = "100";
+  const list = document.getElementById("reflect-prompts");
+  if (list) {
+    list.innerHTML = [
+      "What did I learn this week that surprised me?",
+      "What concept do I still find challenging?",
+      "What strategy will I try differently next time?",
+    ].map((p, i) =>
+      `<div class="reflect-prompt-row"><span>${i + 1}.</span><input type="text" class="reflect-prompt-input" placeholder="${p}" /></div>`
+    ).join("");
+  }
+}
+
+document.getElementById("add-reflect-prompt")?.addEventListener("click", () => {
+  const list = document.getElementById("reflect-prompts");
+  const count = list.querySelectorAll(".reflect-prompt-row").length + 1;
+  const row = document.createElement("div");
+  row.className = "reflect-prompt-row";
+  row.innerHTML = `<span>${count}.</span><input type="text" class="reflect-prompt-input" placeholder="Prompt ${count}" />`;
+  list.appendChild(row);
+});
+
+document.getElementById("ai-gen-reflect-btn")?.addEventListener("click", () => {
+  const subject = assignmentSubject.value;
+  const prompts = [
+    `What was the most important concept I learned in ${subject} this week?`,
+    "How does this connect to something I already knew?",
+    "What did I find most challenging, and what steps did I take to overcome it?",
+    "How confident am I in applying this knowledge to a new problem? Why?",
+    "What is one specific goal I will set for next week's learning?",
+  ];
+  const list = document.getElementById("reflect-prompts");
+  list.innerHTML = prompts.map((p, i) =>
+    `<div class="reflect-prompt-row"><span>${i + 1}.</span><input type="text" class="reflect-prompt-input" value="${escAttr(p)}" /></div>`
+  ).join("");
+  assignmentTitle.value = assignmentTitle.value || `${subject} — Learning Reflection`;
+  showToast(`AI generated ${prompts.length} reflection prompts for ${subject}`);
+});
 
 document.querySelector("#ai-generate").addEventListener("click", () => {
   const subject = document.querySelector("#ai-subject").value;

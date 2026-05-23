@@ -239,13 +239,14 @@
               <label>
                 Type
                 <select id="assignment-type">
-                  <option value="homework">Homework</option>
-                  <option value="quiz">Quiz</option>
-                  <option value="lab_report">Lab Report</option>
-                  <option value="essay">Essay</option>
-                  <option value="project">Project</option>
-                  <option value="practice_set">Practice Set</option>
-                  <option value="revision">Revision</option>
+                  <option value="worksheet">Worksheet (练习题)</option>
+                  <option value="essay">Essay / Writing (作文)</option>
+                  <option value="quiz">Quiz (在线测验)</option>
+                  <option value="practical">Practical Report (实验报告)</option>
+                  <option value="project">Project (项目作业)</option>
+                  <option value="presentation">Oral / Presentation (演讲)</option>
+                  <option value="exam">Exam / Mock Exam (考试)</option>
+                  <option value="reflection">Reflection / Journal (反思)</option>
                 </select>
               </label>
               <label>
@@ -437,6 +438,124 @@
           </div>
         </div>
 
+        <!-- Practical Report Builder -->
+        <div class="type-panel" id="practical-builder" style="display:none">
+          <div class="questions-header">
+            <p class="subtable-title" style="margin:0">Practical Report Template</p>
+          </div>
+          <div class="outline-template" style="margin-top:8px">
+            <div class="outline-section">
+              <div class="outline-section-head"><span class="outline-dot intro"></span><strong>Aim & Hypothesis</strong></div>
+              <input type="text" id="prac-aim" placeholder="e.g. Investigate the relationship between force and acceleration" />
+              <input type="text" id="prac-hypothesis" placeholder="e.g. If force increases, then acceleration increases proportionally" style="margin-top:6px" />
+            </div>
+            <div class="outline-section">
+              <div class="outline-section-head"><span class="outline-dot body"></span><strong>Materials & Method</strong></div>
+              <textarea id="prac-method" rows="3" placeholder="List equipment and step-by-step procedure"></textarea>
+            </div>
+            <div class="outline-section">
+              <div class="outline-section-head"><span class="outline-dot conclusion"></span><strong>Results & Analysis</strong></div>
+              <div class="form-grid">
+                <label>Data table required <select id="prac-data-table"><option value="yes">Yes</option><option value="no">No</option></select></label>
+                <label>Graph required <select id="prac-graph"><option value="yes">Yes</option><option value="no">No</option><option value="optional">Optional</option></select></label>
+              </div>
+            </div>
+            <div class="outline-section">
+              <div class="outline-section-head"><span class="outline-dot" style="background:var(--red)"></span><strong>Conclusion & Evaluation</strong></div>
+              <input type="text" id="prac-conclusion" placeholder="e.g. Link results back to hypothesis, discuss errors and improvements" />
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:10px">
+            <label>Safety requirements <input type="text" id="prac-safety" placeholder="e.g. Wear safety goggles, handle chemicals with care" /></label>
+            <label>Lab room <select id="prac-room"><option>Lab 1</option><option>Lab 2</option><option>Lab 3</option><option>Home Lab</option></select></label>
+          </div>
+          <button type="button" class="ghost-button ai-gen-btn" id="ai-gen-prac-btn" style="margin-top:10px">✦ AI Generate Lab Template</button>
+        </div>
+
+        <!-- Project Builder -->
+        <div class="type-panel" id="project-builder" style="display:none">
+          <div class="questions-header">
+            <p class="subtable-title" style="margin:0">Project Configuration</p>
+          </div>
+          <div class="form-grid" style="margin-top:8px">
+            <label>Submission mode <select id="proj-mode"><option value="individual">Individual</option><option value="group">Group (team submission)</option></select></label>
+            <label>Max group size <input type="number" id="proj-group-size" value="4" min="2" max="8" /></label>
+          </div>
+          <p class="subtable-title">Milestones</p>
+          <div class="milestone-list" id="proj-milestones">
+            <div class="milestone-row"><span class="milestone-num">1</span><input type="text" class="milestone-input" placeholder="Proposal / Topic Selection" /><input type="date" class="milestone-date" /></div>
+            <div class="milestone-row"><span class="milestone-num">2</span><input type="text" class="milestone-input" placeholder="Research & Data Collection" /><input type="date" class="milestone-date" /></div>
+            <div class="milestone-row"><span class="milestone-num">3</span><input type="text" class="milestone-input" placeholder="Draft / Prototype" /><input type="date" class="milestone-date" /></div>
+            <div class="milestone-row"><span class="milestone-num">4</span><input type="text" class="milestone-input" placeholder="Final Submission & Presentation" /><input type="date" class="milestone-date" /></div>
+          </div>
+          <button type="button" class="ghost-button" id="add-milestone-btn" style="margin-top:6px;font-size:12px">+ Add Milestone</button>
+          <label style="margin-top:10px">Deliverables <textarea id="proj-deliverables" rows="2" placeholder="e.g. Written report (2000 words) + presentation slides + source code"></textarea></label>
+        </div>
+
+        <!-- Presentation Builder -->
+        <div class="type-panel" id="presentation-builder" style="display:none">
+          <div class="questions-header">
+            <p class="subtable-title" style="margin:0">Oral / Presentation Setup</p>
+          </div>
+          <div class="form-grid" style="margin-top:8px">
+            <label>Format <select id="pres-format"><option value="live">Live in-class</option><option value="recorded">Recorded video upload</option><option value="slides">Slides + script only</option></select></label>
+            <label>Duration <div class="form-grid" style="margin-top:0"><input type="number" id="pres-min-min" value="3" min="1" max="30" placeholder="Min" style="width:60px" /><span style="padding:6px 0;color:var(--muted)">–</span><input type="number" id="pres-max-min" value="8" min="1" max="60" placeholder="Max" style="width:60px" /><span style="padding:6px 0;color:var(--muted)">min</span></div></label>
+          </div>
+          <div class="form-grid">
+            <label>Accepted file types <select id="pres-files" multiple style="height:80px"><option selected>PPT / PPTX</option><option selected>PDF</option><option>MP4 / Video</option><option>MP3 / Audio</option><option>Google Slides link</option></select></label>
+            <label>Assessment criteria <textarea id="pres-criteria" rows="3" placeholder="e.g. Content accuracy, delivery, visual aids, audience engagement, Q&A response"></textarea></label>
+          </div>
+          <label>Topic / Prompt <input type="text" id="pres-topic" placeholder="e.g. Present your research findings on renewable energy sources" /></label>
+        </div>
+
+        <!-- Exam Builder -->
+        <div class="type-panel" id="exam-builder" style="display:none">
+          <div class="questions-header">
+            <p class="subtable-title" style="margin:0">Exam / Mock Exam Settings</p>
+          </div>
+          <div class="form-grid" style="margin-top:8px">
+            <label>Exam type <select id="exam-type"><option value="wace_mock">WACE Mock Exam</option><option value="alevel_mock">A-Level Mock</option><option value="olevel_mock">O-Level Mock</option><option value="class_test">Class Test</option><option value="mid_year">Mid-Year Exam</option><option value="final">Final Exam</option></select></label>
+            <label>Time limit <div class="form-grid" style="margin-top:0"><input type="number" id="exam-duration" value="120" min="10" max="300" style="width:80px" /><span style="padding:6px 0;color:var(--muted)">minutes</span></div></label>
+          </div>
+          <div class="form-grid">
+            <label>Open time <input type="datetime-local" id="exam-open" /></label>
+            <label>Close time <input type="datetime-local" id="exam-close" /></label>
+          </div>
+          <div class="form-grid">
+            <label>Allowed materials <select id="exam-materials"><option value="closed">Closed book</option><option value="open">Open book</option><option value="formula_sheet">Formula sheet only</option><option value="calculator">Calculator allowed</option></select></label>
+            <label>Submission lock <select id="exam-lock"><option value="auto">Auto-submit on time up</option><option value="manual">Manual submit only</option><option value="grace">5-min grace period</option></select></label>
+          </div>
+          <div class="checkbox-grid" style="margin-top:10px">
+            <label><input type="checkbox" id="exam-shuffle" /> Shuffle question order</label>
+            <label><input type="checkbox" id="exam-one-page" /> Show one question at a time</label>
+            <label><input type="checkbox" id="exam-no-back" /> Prevent going back</label>
+            <label><input type="checkbox" id="exam-monitor" /> Enable monitoring (future)</label>
+          </div>
+        </div>
+
+        <!-- Reflection Builder -->
+        <div class="type-panel" id="reflection-builder" style="display:none">
+          <div class="questions-header">
+            <p class="subtable-title" style="margin:0">Reflection / Journal Setup</p>
+          </div>
+          <div class="form-grid" style="margin-top:8px">
+            <label>Reflection type <select id="reflect-type"><option value="learning">Learning Reflection</option><option value="weekly">Weekly Journal</option><option value="wellbeing">Wellbeing Check-in</option><option value="goal">Goal Setting & Review</option><option value="peer">Peer Feedback Reflection</option></select></label>
+            <label>Frequency <select id="reflect-freq"><option value="once">One-time</option><option value="weekly">Weekly</option><option value="fortnightly">Fortnightly</option><option value="after_assessment">After each assessment</option></select></label>
+          </div>
+          <p class="subtable-title">Guided Prompts</p>
+          <div class="reflection-prompts" id="reflect-prompts">
+            <div class="reflect-prompt-row"><span>1.</span><input type="text" class="reflect-prompt-input" placeholder="What did I learn this week that surprised me?" /></div>
+            <div class="reflect-prompt-row"><span>2.</span><input type="text" class="reflect-prompt-input" placeholder="What concept do I still find challenging?" /></div>
+            <div class="reflect-prompt-row"><span>3.</span><input type="text" class="reflect-prompt-input" placeholder="What strategy will I try differently next time?" /></div>
+          </div>
+          <button type="button" class="ghost-button" id="add-reflect-prompt" style="margin-top:6px;font-size:12px">+ Add Prompt</button>
+          <div class="form-grid" style="margin-top:10px">
+            <label>Visibility <select id="reflect-visibility"><option value="teacher">Teacher only</option><option value="teacher_parent">Teacher + Parent</option><option value="private">Student private (teacher can view)</option></select></label>
+            <label>Min word count <input type="number" id="reflect-min-words" value="100" min="0" max="2000" /></label>
+          </div>
+          <button type="button" class="ghost-button ai-gen-btn" id="ai-gen-reflect-btn" style="margin-top:10px">✦ AI Generate Reflection Prompts</button>
+        </div>
+
         <div class="assign-footer">
           <p class="modal-hint" style="margin:0">Only subjects you are authorised to teach will appear. Assignments sync to the student portal and evidence log.</p>
           <div class="assign-footer-actions">
@@ -595,6 +714,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
     <script src="./data-adapter.js"></script>
-    <script src="./app.js?v=18"></script>
+    <script src="./app.js?v=20"></script>
   </body>
 </html>

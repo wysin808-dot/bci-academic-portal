@@ -1147,6 +1147,62 @@ body.dark .question-badge.multi { background: #1a3540; color: #6dc8e8; }
 .grade-q-score.zero { color: var(--red); }
 .grade-q-score.partial { color: var(--amber); }
 
+.type-panel {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.milestone-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.milestone-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 140px;
+  gap: 8px;
+  align-items: center;
+}
+
+.milestone-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reflection-prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.reflect-prompt-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.reflect-prompt-row span {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.reflect-prompt-row input {
+  flex: 1;
+}
+
 @media (max-width: 720px) {
   .assign-form-body {
     grid-template-columns: 1fr;

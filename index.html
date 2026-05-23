@@ -710,10 +710,102 @@
       </div>
     </div>
 
+    <!-- Student Submission Modal -->
+    <div class="modal" id="submission-modal" aria-hidden="true">
+      <div class="modal-card modal-card-wide">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow" id="sub-eyebrow">Assignment</p>
+            <h3 id="sub-title">Submit Assignment</h3>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="badge amber" id="sub-countdown" style="display:none"></span>
+            <button class="icon-button" id="sub-close" type="button">×</button>
+          </div>
+        </div>
+
+        <div class="assign-form-body" style="overflow-y:auto;max-height:calc(85vh - 140px)">
+          <!-- Left: assignment info (read-only) -->
+          <div class="assign-col">
+            <p class="subtable-title">Assignment Details</p>
+            <div class="sub-info-card" id="sub-info">
+              <div class="sub-info-row"><span>Subject</span><strong id="sub-subject"></strong></div>
+              <div class="sub-info-row"><span>Type</span><strong id="sub-type"></strong></div>
+              <div class="sub-info-row"><span>Due</span><strong id="sub-due"></strong></div>
+              <div class="sub-info-row"><span>Marks</span><strong id="sub-marks"></strong></div>
+              <div class="sub-info-row"><span>Assigned by</span><strong id="sub-teacher"></strong></div>
+            </div>
+            <label style="margin-top:8px">Instructions
+              <div class="sub-instructions" id="sub-instructions"></div>
+            </label>
+            <div id="sub-teacher-files" style="margin-top:8px;display:none">
+              <p class="subtable-title" style="margin:0 0 4px 0">Attached Resources</p>
+              <div id="sub-teacher-file-list"></div>
+            </div>
+          </div>
+
+          <!-- Right: student answer area -->
+          <div class="assign-col">
+            <p class="subtable-title">Your Answer</p>
+
+            <!-- Essay stages tab -->
+            <div id="sub-essay-tabs" style="display:none" class="scope-toggle">
+              <button type="button" class="scope-btn active" data-stage="outline">Outline</button>
+              <button type="button" class="scope-btn" data-stage="draft">Draft</button>
+              <button type="button" class="scope-btn" data-stage="final">Final</button>
+            </div>
+
+            <!-- Questions area (MCQ/Fill/Multi/Open/Reading) -->
+            <div id="sub-questions-area" style="display:none"></div>
+
+            <!-- Essay/text area -->
+            <div id="sub-essay-area" style="display:none">
+              <textarea id="sub-essay-text" rows="12" placeholder="Write your answer here..."></textarea>
+              <div class="sub-word-count"><span id="sub-word-count">0</span> words <span id="sub-word-range"></span></div>
+            </div>
+
+            <!-- Generic text area (reflection, practical, etc.) -->
+            <div id="sub-generic-area" style="display:none">
+              <div id="sub-generic-prompts"></div>
+              <textarea id="sub-generic-text" rows="8" placeholder="Write your response here..."></textarea>
+            </div>
+
+            <!-- File upload -->
+            <div class="attach-zone" id="sub-attach-zone" style="margin-top:10px">
+              <span>Drop file here or click to upload (PDF, DOCX, JPG, PNG · max 20MB)</span>
+              <input type="file" id="sub-file-input" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png" style="display:none" multiple />
+            </div>
+            <div id="sub-file-list" style="margin-top:4px"></div>
+
+            <!-- Draft auto-save indicator -->
+            <div class="sub-draft-status" id="sub-draft-status" style="display:none">
+              <span class="badge green" style="font-size:11px">Draft saved</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submission history -->
+        <div id="sub-history" style="display:none;padding:0 20px 8px">
+          <p class="subtable-title">Submission History</p>
+          <div id="sub-history-list"></div>
+        </div>
+
+        <div class="assign-footer">
+          <p class="modal-hint" id="sub-late-warning" style="margin:0;display:none;color:var(--red)">This submission will be marked as late.</p>
+          <div class="assign-footer-actions">
+            <button class="ghost-button" id="sub-cancel" type="button">Cancel</button>
+            <button class="ghost-button" id="sub-save-draft" type="button">Save Draft</button>
+            <button class="primary-button" id="sub-submit" type="button">Submit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
     <script src="./data-adapter.js"></script>
-    <script src="./app.js?v=20"></script>
+    <script src="./app.js?v=22"></script>
+    <script src="./submissions.js?v=6"></script>
   </body>
 </html>

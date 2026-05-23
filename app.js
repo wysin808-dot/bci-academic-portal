@@ -490,6 +490,7 @@ const defaultRecords = {
 };
 
 let appState = loadState();
+window.appState = appState;
 let currentRole = normalizeRole(appState.currentRole);
 let currentModule = appState.currentModule || 0;
 let authLockedRole = false;
@@ -901,6 +902,18 @@ function statusButton(label, action, id) {
   return `<button class="mini-action" type="button" data-action="${action}" data-id="${id}">${label}</button>`;
 }
 
+function studentAssignmentButton(assignment, idx) {
+  if (!assignment) return "";
+  const status = assignmentDisplayStatus(assignment);
+  if (status === "Submitted" || status === "Marked" || status === "Returned") return "";
+  if (!canSubmitAssignment(assignment)) return "";
+  try {
+    const drafts = JSON.parse(localStorage.getItem("bci_submission_drafts") || "{}");
+    const hasDraft = !!drafts[assignment.id];
+    return statusButton(hasDraft ? "Continue" : "Start", "open-submission", idx);
+  } catch { return statusButton("Start", "open-submission", idx); }
+}
+
 function buildDashboard(role) {
   const data = portalData[role];
   const avg = scoreAverage();
@@ -1236,7 +1249,7 @@ function renderPortal(role, moduleIndex = currentModule) {
         <span class="badge ${badgeClass(status)}">${status}</span>
         ${moduleName.includes("Attendance") && role === "teacher" ? statusButton("Toggle", "toggle-attendance", idx) : ""}
         ${moduleName.includes("Assignment") && role === "teacher" ? statusButton("Grade", "grade-assignment", idx) + statusButton("Advance", "advance-assignment", idx) : ""}
-        ${moduleName.includes("Assignment") && role === "student" && canSubmitAssignment(visibleAssignmentsForRole(role)[idx]) ? statusButton("Submit", "submit-assignment", idx) : ""}
+        ${moduleName.includes("Assignment") && role === "student" ? studentAssignmentButton(visibleAssignmentsForRole(role)[idx], idx) : ""}
         ${moduleName.includes("WACE Teacher Marks") && role === "teacher" ? statusButton("Submit", "submit-wace-result", idx) : ""}
         ${moduleName.includes("WACE Teacher Marks") && (role === "admin" || role === "academic_director") ? statusButton("Approve/Release", "approve-wace-result", idx) : ""}
         ${moduleName.includes("Student Timetables") && (role === "admin" || role === "academic_director") && String(status).includes("Conflict") ? statusButton("Resolve", "resolve-timetable-conflict", idx) : ""}
@@ -1255,8 +1268,13 @@ function renderPortal(role, moduleIndex = currentModule) {
   tableHead.innerHTML = `<tr>${data.tableHead.map((h) => `<th>${h}</th>`).join("")}</tr>`;
   tableBody.innerHTML = data.table.map((row, rowIndex) => `<tr>${row.map((cell, idx) => {
     const isLastCell = idx === row.length - 1;
-    if (moduleName.includes("Assignment") && role === "student" && isLastCell && cell === "Submit") {
-      return `<td>${statusButton("Submit", "submit-assignment", rowIndex)}</td>`;
+    if (moduleName.includes("Assignment") && role === "student" && isLastCell) {
+      const a = visibleAssignmentsForRole("student")[rowIndex];
+      if (a && canSubmitAssignment(a)) {
+        const hasDraft = localStorage.getItem("bci_submission_drafts") && JSON.parse(localStorage.getItem("bci_submission_drafts") || "{}")[a.id];
+        const label = hasDraft ? "Continue" : "Start";
+        return `<td>${statusButton(label, "open-submission", rowIndex)}</td>`;
+      }
     }
     return isLastCell ? `<td><span class="badge ${badgeClass(cell)}">${cell}</span></td>` : `<td>${cell}</td>`;
   }).join("")}</tr>`).join("");
@@ -1367,8 +1385,8 @@ async function handlePrimaryAction() {
     return;
   } else if (moduleName.includes("Assignment") && currentRole === "student") {
     const item = visibleAssignmentsForRole("student").find((entry) => canSubmitAssignment(entry));
-    if (await submitAssignmentRecord(item)) {
-      if (!cloudConfigured()) showToast("Assignment submitted and linked to submission record");
+    if (item && typeof openSubmissionModal === "function") {
+      openSubmissionModal(item);
     } else {
       showToast("No due assignment to submit");
     }
@@ -2370,6 +2388,20 @@ primaryList.addEventListener("click", async (event) => {
     const flow = ["Draft", "Due", "Submitted", "Marked"];
     item.status = flow[(flow.indexOf(item.status) + 1) % flow.length] || "Submitted";
     showToast(`Assignment is now ${item.status}`);
+  }
+  if (action === "open-submission") {
+    const moduleName = portalData[currentRole].nav[currentModule];
+    const visibleAssignments = moduleName.includes("Assignment") && currentRole === "student"
+      ? visibleAssignmentsForRole("student")
+      : appState.assignments;
+    const visibleItem = visibleAssignments[idx];
+    const item = appState.assignments.find((entry) => entry.id === visibleItem?.id);
+    if (item && typeof openSubmissionModal === "function") {
+      openSubmissionModal(item);
+    } else {
+      showToast("Cannot open this assignment");
+    }
+    return;
   }
   if (action === "submit-assignment") {
     const moduleName = portalData[currentRole].nav[currentModule];

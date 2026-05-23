@@ -1235,3 +1235,99 @@ body.dark .question-badge.multi { background: #1a3540; color: #6dc8e8; }
 .checkbox-grid input[type="checkbox"] {
   accent-color: var(--primary);
 }
+
+/* ── Student Submission Modal ─────────────────── */
+.sub-info-card {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.sub-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+.sub-info-row:last-child { border-bottom: none; }
+.sub-info-row span { color: var(--muted); }
+.sub-instructions {
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 10px;
+  font-size: 0.85rem;
+  min-height: 40px;
+  white-space: pre-wrap;
+  color: var(--text);
+}
+.sub-word-count {
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.sub-draft-status {
+  text-align: right;
+  margin-top: 6px;
+}
+#sub-essay-text, #sub-generic-text {
+  width: 100%;
+  font-family: inherit;
+  resize: vertical;
+}
+.sub-question-card {
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.sub-question-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.sub-question-head .question-badge {
+  font-size: 0.7rem;
+}
+.sub-mcq-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+.sub-mcq-options label:hover {
+  background: var(--border);
+}
+.sub-history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--border);
+}
+.sub-history-row:last-child { border-bottom: none; }
+.sub-generic-prompt-block {
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.sub-generic-prompt-block label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: block;
+  margin-bottom: 4px;
+}
+.sub-generic-prompt-block textarea {
+  width: 100%;
+  font-family: inherit;
+  resize: vertical;
+}

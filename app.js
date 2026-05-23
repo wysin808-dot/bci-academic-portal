@@ -2918,9 +2918,14 @@ async function openAddTeacherModal() {
   const subjectsGrid = document.getElementById("add-teacher-subjects");
   if (subjectsGrid) {
     if (!appState._cloudSubjects?.length) {
-      appState._cloudSubjects = await window.AcademicDataAdapter.listSubjects();
+      try {
+        appState._cloudSubjects = await window.AcademicDataAdapter.listSubjects();
+      } catch { /* cloud unavailable */ }
     }
-    subjectsGrid.innerHTML = (appState._cloudSubjects || []).map((s) =>
+    const subjects = appState._cloudSubjects?.length
+      ? appState._cloudSubjects
+      : BCI_APPROVED_SUBJECTS.map((s) => ({ id: s.code, name: s.name }));
+    subjectsGrid.innerHTML = subjects.map((s) =>
       `<label><input type="checkbox" value="${s.id}" /> ${s.name}</label>`
     ).join("");
   }

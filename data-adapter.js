@@ -331,6 +331,25 @@ async function listSubjects() {
   return data || [];
 }
 
+async function listMyTeacherSubjects() {
+  const client = createAcademicClient();
+  if (!client) return [];
+  const { data: { user } } = await client.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await client
+    .from("teacher_subjects")
+    .select("id, subject_id, permission_level, status, subjects!inner(id, name, code)")
+    .eq("teacher_id", user.id)
+    .eq("status", "active");
+  if (error) throw error;
+  return (data || []).map((row) => ({
+    subjectId: row.subjects.id,
+    subjectName: row.subjects.name,
+    subjectCode: row.subjects.code,
+    permissionLevel: row.permission_level,
+  }));
+}
+
 window.AcademicDataAdapter = {
   adminCreateStudent,
   adminCreateTeacher,
@@ -342,6 +361,7 @@ window.AcademicDataAdapter = {
   getMyPortalRole,
   listStudents,
   listSubjects,
+  listMyTeacherSubjects,
   listTeachers,
   loadRoleBackend,
   loadRubric,

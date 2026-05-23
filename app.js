@@ -1430,11 +1430,49 @@ function openQrModal() {
   qrModal.setAttribute("aria-hidden", "false");
 }
 
-function openAssignmentModal() {
+async function openAssignmentModal() {
   assignmentTitle.value = "";
   assignmentDue.value = dateInputValue(1);
   assignmentStatus.value = "Due";
   assignmentNote.value = "";
+
+  let populated = false;
+  if (cloudConfigured()) {
+    try {
+      const [mySubjects, students] = await Promise.all([
+        window.AcademicDataAdapter.listMyTeacherSubjects(),
+        window.AcademicDataAdapter.listStudents(),
+      ]);
+      if (mySubjects.length) {
+        assignmentSubject.innerHTML = mySubjects.map((s) =>
+          `<option value="${s.subjectName}">${s.subjectName}</option>`
+        ).join("");
+        populated = true;
+      }
+      if (students.length) {
+        assignmentStudent.innerHTML = students.map((s) =>
+          `<option value="${s.full_name}">${s.full_name}</option>`
+        ).join("");
+      }
+    } catch (e) {
+      console.warn("Failed to load teacher subjects / students:", e);
+    }
+  }
+  if (!populated) {
+    const mySubjects = appState.teacherSubjects.filter((ts) => ts.canCreateAssignments);
+    if (mySubjects.length) {
+      assignmentSubject.innerHTML = mySubjects.map((s) =>
+        `<option value="${s.subject}">${s.subject}</option>`
+      ).join("");
+    }
+    const localStudents = [...new Set(appState.assignments.map((a) => a.student).filter(Boolean))];
+    if (localStudents.length) {
+      assignmentStudent.innerHTML = localStudents.map((s) =>
+        `<option value="${s}">${s}</option>`
+      ).join("");
+    }
+  }
+
   assignmentModal.classList.add("active");
   assignmentModal.setAttribute("aria-hidden", "false");
   assignmentTitle.focus();

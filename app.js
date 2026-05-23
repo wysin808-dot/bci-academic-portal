@@ -182,7 +182,7 @@ const portalData = {
     action: "Review Risks",
     focus: "12 risk flags · 3 programmes",
     heroTitle: "WACE ATAR programme oversight active.",
-    heroCopy: "BCI offers 11 SCSA-approved ATAR subjects. Year 11 Physics has the highest risk concentration this week, driven by quiz results and incomplete homework.",
+    heroCopy: "BCI offers 16 SCSA-approved ATAR subjects (11 NH + 5 SH-only). Year 11 Physics has the highest risk concentration this week, driven by quiz results and incomplete homework.",
     nav: ["Overview", "Programmes", "Subjects", "Classes", "Student Timetables", "WACE Teacher Marks", "At-risk Students", "Teacher Workload", "Assessment Calendar"],
     heroMetrics: [
       ["11", "ATAR Subjects"],
@@ -653,6 +653,11 @@ const BCI_APPROVED_SUBJECTS = [
   { code: "AEMAM", name: "Mathematics Methods", list: "B", hemisphere: "NH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [35, 45] }, { type: "Investigation", weight: [15, 25] }, { type: "Examination", weight: [35, 45] }] },
   { code: "AEPHY", name: "Physics", list: "B", hemisphere: "NH", courseType: "ATAR", atarTypes: [{ type: "Investigation", weight: [15, 25] }, { type: "Test", weight: [25, 35] }, { type: "Examination", weight: [40, 55] }] },
   { code: "AEPSY", name: "Psychology", list: "A", hemisphere: "NH", courseType: "ATAR", atarTypes: [{ type: "Investigation", weight: [15, 25] }, { type: "Response", weight: [25, 35] }, { type: "Examination", weight: [40, 50] }] },
+  { code: "AEAIT", name: "Applied Information Technology", list: "B", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Practical", weight: [25, 35] }, { type: "Response", weight: [25, 35] }, { type: "Examination", weight: [35, 45] }] },
+  { code: "AEBLY", name: "Biology", list: "B", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Investigation", weight: [15, 25] }, { type: "Test", weight: [25, 35] }, { type: "Examination", weight: [40, 55] }] },
+  { code: "AECFL", name: "Chinese: First Language", list: "A", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [25, 35] }, { type: "Production", weight: [25, 35] }, { type: "Examination", weight: [35, 45] }] },
+  { code: "AECSL", name: "Chinese: Second Language", list: "A", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [25, 35] }, { type: "Production", weight: [25, 35] }, { type: "Examination", weight: [35, 45] }] },
+  { code: "AEMAS", name: "Mathematics Specialist", list: "B", hemisphere: "SH", courseType: "ATAR", atarTypes: [{ type: "Response", weight: [35, 45] }, { type: "Investigation", weight: [15, 25] }, { type: "Examination", weight: [35, 45] }] },
 ];
 
 function subjectByCode(code) {

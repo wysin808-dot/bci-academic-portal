@@ -703,7 +703,7 @@ GROUP BY s.id, s.full_name, s.year_level;
 
 -- ────────────────────────────────────────────────────────────
 -- BCI Approved WACE ATAR Subjects (SCSA Agreement)
--- Northern Hemisphere — 11 subjects, all ATAR
+-- 11 NH + 5 SH-only = 16 ATAR subjects total
 -- ────────────────────────────────────────────────────────────
 
 INSERT INTO wace_outline_templates (subject_code, subject_name, course_type, assessment_type, weight_min, weight_max) VALUES
@@ -739,5 +739,21 @@ INSERT INTO wace_outline_templates (subject_code, subject_name, course_type, ass
   ('AEPHY', 'Physics', 'ATAR', 'Examination', 40, 55),
   ('AEPSY', 'Psychology', 'ATAR', 'Investigation', 15, 25),
   ('AEPSY', 'Psychology', 'ATAR', 'Response', 25, 35),
-  ('AEPSY', 'Psychology', 'ATAR', 'Examination', 40, 50)
+  ('AEPSY', 'Psychology', 'ATAR', 'Examination', 40, 50),
+  -- SH-only subjects (5)
+  ('AEAIT', 'Applied Information Technology', 'ATAR', 'Practical', 25, 35),
+  ('AEAIT', 'Applied Information Technology', 'ATAR', 'Response', 20, 30),
+  ('AEAIT', 'Applied Information Technology', 'ATAR', 'Examination', 35, 45),
+  ('AEBLY', 'Biology', 'ATAR', 'Investigation', 15, 25),
+  ('AEBLY', 'Biology', 'ATAR', 'Test', 25, 35),
+  ('AEBLY', 'Biology', 'ATAR', 'Examination', 40, 55),
+  ('AECFL', 'Chinese: First Language', 'ATAR', 'Response', 25, 35),
+  ('AECFL', 'Chinese: First Language', 'ATAR', 'Oral', 15, 25),
+  ('AECFL', 'Chinese: First Language', 'ATAR', 'Examination', 40, 50),
+  ('AECSL', 'Chinese: Second Language', 'ATAR', 'Response', 25, 35),
+  ('AECSL', 'Chinese: Second Language', 'ATAR', 'Oral', 15, 25),
+  ('AECSL', 'Chinese: Second Language', 'ATAR', 'Examination', 40, 50),
+  ('AEMAS', 'Mathematics Specialist', 'ATAR', 'Response', 35, 45),
+  ('AEMAS', 'Mathematics Specialist', 'ATAR', 'Investigation', 15, 25),
+  ('AEMAS', 'Mathematics Specialist', 'ATAR', 'Examination', 35, 45)
 ON CONFLICT (subject_code, course_type, assessment_type) DO NOTHING;

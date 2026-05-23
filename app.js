@@ -1892,6 +1892,10 @@ function openAddStudentModal() {
   document.getElementById("add-student-name").value = "";
   document.getElementById("add-student-email").value = "";
   document.getElementById("add-student-password").value = "BCI2025test";
+  document.getElementById("add-parent-name").value = "";
+  document.getElementById("add-parent-email").value = "";
+  document.getElementById("add-parent-password").value = "BCI2025parent";
+  document.getElementById("add-parent-phone").value = "";
   document.getElementById("add-student-error").textContent = "";
   addStudentModal.classList.add("active");
 }
@@ -1923,6 +1927,10 @@ document.getElementById("add-student-submit")?.addEventListener("click", async (
   const email = document.getElementById("add-student-email").value.trim();
   const password = document.getElementById("add-student-password").value;
   const year = document.getElementById("add-student-year").value;
+  const parentName = document.getElementById("add-parent-name").value.trim();
+  const parentEmail = document.getElementById("add-parent-email").value.trim();
+  const parentPassword = document.getElementById("add-parent-password").value;
+  const parentPhone = document.getElementById("add-parent-phone").value.trim();
   const errorEl = document.getElementById("add-student-error");
   if (!name || !email) { errorEl.textContent = "Name and email are required"; return; }
 
@@ -1930,9 +1938,13 @@ document.getElementById("add-student-submit")?.addEventListener("click", async (
   btn.disabled = true;
   btn.textContent = "Creating...";
   try {
-    await window.AcademicDataAdapter.adminCreateStudent({ email, password, fullName: name, yearLevel: year });
+    const result = await window.AcademicDataAdapter.adminCreateStudent({
+      email, password, fullName: name, yearLevel: year,
+      parentName, parentEmail, parentPassword, parentPhone,
+    });
     addStudentModal.classList.remove("active");
-    showToast(`Student ${name} created`);
+    const msg = result?.parent_status ? `Student ${name} + parent created` : `Student ${name} created`;
+    showToast(msg);
     await loadCloudLists();
     renderPortal(currentRole, currentModule);
   } catch (err) {
@@ -1940,7 +1952,7 @@ document.getElementById("add-student-submit")?.addEventListener("click", async (
     errorEl.style.color = "var(--danger, #e53e3e)";
   } finally {
     btn.disabled = false;
-    btn.textContent = "Create student account";
+    btn.textContent = "Create student + parent accounts";
   }
 });
 

@@ -274,16 +274,21 @@ async function saveRubric({ id, assignmentId, outlineId, title, totalMarks, crit
   return rubric;
 }
 
-async function adminCreateStudent({ email, password, fullName, yearLevel, programme }) {
+async function adminCreateStudent({ email, password, fullName, yearLevel, programme, parentName, parentEmail, parentPassword, parentPhone }) {
   const client = createAcademicClient();
   if (!client) return null;
-  const { data, error } = await client.rpc("admin_create_student", {
+  const params = {
     p_email: email,
     p_password: password,
     p_full_name: fullName,
     p_year_level: yearLevel || "Year 11",
     p_programme: programme || "WACE",
-  });
+  };
+  if (parentName) params.p_parent_name = parentName;
+  if (parentEmail) params.p_parent_email = parentEmail;
+  if (parentPassword) params.p_parent_password = parentPassword;
+  if (parentPhone) params.p_parent_phone = parentPhone;
+  const { data, error } = await client.rpc("admin_create_student", params);
   if (error) throw error;
   return data;
 }

@@ -1229,9 +1229,11 @@ body.dark .question-badge.multi { background: #1a3540; color: #6dc8e8; }
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--surface-2);

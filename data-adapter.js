@@ -216,6 +216,56 @@ async function submitAssignment({ assignmentId, studentId, fileUrl, fileName }) 
   return data;
 }
 
+async function loadRubric(assignmentId) {
+  const client = createAcademicClient();
+  if (!client) return null;
+  const { data: rubric, error: rErr } = await client
+    .from("rubrics")
+    .select("*")
+    .eq("assignment_id", assignmentId)
+    .maybeSingle();
+  if (rErr) throw rErr;
+  if (!rubric) return null;
+  const { data: criteria, error: cErr } = await client
+    .from("rubric_criteria")
+    .select("*")
+    .eq("rubric_id", rubric.id)
+    .order("sort_order");
+  if (cErr) throw cErr;
+  return { ...rubric, criteria: criteria || [] };
+}
+
+async function saveRubric({ assignmentId, outlineId, title, totalMarks, criteria }) {
+  const client = createAcademicClient();
+  if (!client) return null;
+  const { data: rubric, error: rErr } = await client
+    .from("rubrics")
+    .upsert({
+      assignment_id: assignmentId || null,
+      outline_id: outlineId || null,
+      title,
+      total_marks: totalMarks,
+      status: "active",
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "id" })
+    .select()
+    .single();
+  if (rErr) throw rErr;
+  if (criteria?.length) {
+    const rows = criteria.map((c, i) => ({
+      rubric_id: rubric.id,
+      criterion: c.criterion,
+      description: c.description || "",
+      max_marks: c.max_marks || 0,
+      sort_order: i + 1,
+      descriptors: c.descriptors || [],
+    }));
+    const { error: cErr } = await client.from("rubric_criteria").insert(rows);
+    if (cErr) throw cErr;
+  }
+  return rubric;
+}
+
 window.AcademicDataAdapter = {
   createAcademicClient,
   createIndividualAssignment,
@@ -224,7 +274,9 @@ window.AcademicDataAdapter = {
   hasSupabaseConfig,
   getMyPortalRole,
   loadRoleBackend,
+  loadRubric,
   mapBackendToPrototypeState,
   loadAcademicStateFromSupabase,
+  saveRubric,
   submitAssignment,
 };

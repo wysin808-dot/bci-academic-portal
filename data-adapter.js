@@ -13,9 +13,14 @@ function hasSupabaseConfig() {
   return getConfigStatus().configured;
 }
 
+let _cachedClient = null;
+
 function createAcademicClient() {
   if (!hasSupabaseConfig()) return null;
-  return window.supabase.createClient(ACADEMIC_CONFIG.supabaseUrl, ACADEMIC_CONFIG.supabaseAnonKey);
+  if (!_cachedClient) {
+    _cachedClient = window.supabase.createClient(ACADEMIC_CONFIG.supabaseUrl, ACADEMIC_CONFIG.supabaseAnonKey);
+  }
+  return _cachedClient;
 }
 
 function isUuid(value) {

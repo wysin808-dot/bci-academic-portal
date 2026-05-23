@@ -46,6 +46,7 @@
           </div>
           <div class="topbar-actions">
             <button class="icon-button" id="theme-toggle" type="button" title="Toggle theme">◐</button>
+            <button class="ghost-button" id="auth-button" type="button">Sign in</button>
             <button class="primary-button" id="quick-action" type="button">Ask AI Tutor</button>
           </div>
         </header>
@@ -264,10 +265,39 @@
       </div>
     </div>
 
+    <div class="modal" id="login-modal" aria-hidden="true">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Authentication</p>
+            <h3 id="login-header">Sign in to BCI Portal</h3>
+          </div>
+          <button class="icon-button" id="login-close" type="button">×</button>
+        </div>
+        <div id="login-form">
+          <label>
+            Email
+            <input id="login-email" type="email" placeholder="e.g. amanda.lee@student.bci.edu.sg" />
+          </label>
+          <label>
+            Password
+            <input id="login-password" type="password" placeholder="Enter password" />
+          </label>
+          <button class="primary-button full" id="login-submit" type="button">Sign in</button>
+          <p class="modal-hint" id="login-error"></p>
+        </div>
+        <div id="login-info" style="display:none">
+          <p><strong id="login-user-name"></strong></p>
+          <p class="modal-hint" id="login-user-role"></p>
+          <button class="primary-button full" id="login-signout" type="button">Sign out</button>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
     <script src="./data-adapter.js"></script>
-    <script src="./app.js?v=10"></script>
+    <script src="./app.js?v=11"></script>
   </body>
 </html>

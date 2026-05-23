@@ -1717,4 +1717,108 @@ function generateQrSession() {
 document.querySelector("#qr-generate").addEventListener("click", generateQrSession);
 
 renderPortal(currentRole, currentModule);
-bootstrapCloudRole();
+
+// ── Auth UI ──────────────────────────────────────────────
+
+const loginModal = document.getElementById("login-modal");
+const loginClose = document.getElementById("login-close");
+const loginForm = document.getElementById("login-form");
+const loginInfo = document.getElementById("login-info");
+const loginEmail = document.getElementById("login-email");
+const loginPassword = document.getElementById("login-password");
+const loginSubmit = document.getElementById("login-submit");
+const loginSignout = document.getElementById("login-signout");
+const loginError = document.getElementById("login-error");
+const loginUserName = document.getElementById("login-user-name");
+const loginUserRole = document.getElementById("login-user-role");
+const loginHeader = document.getElementById("login-header");
+const authButton = document.getElementById("auth-button");
+
+function updateAuthButton(session) {
+  if (!authButton) return;
+  if (session) {
+    const meta = session.user?.user_metadata;
+    authButton.textContent = meta?.full_name || session.user?.email || "Signed in";
+  } else {
+    authButton.textContent = "Sign in";
+  }
+}
+
+function showLoginModal() {
+  const client = window.AcademicDataAdapter?.createAcademicClient?.();
+  if (!client) { showToast("Supabase not configured"); return; }
+
+  client.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      loginForm.style.display = "none";
+      loginInfo.style.display = "";
+      loginHeader.textContent = "Signed in";
+      loginUserName.textContent = data.session.user.user_metadata?.full_name || data.session.user.email;
+      loginUserRole.textContent = "Role: " + (currentRole || "loading...");
+    } else {
+      loginForm.style.display = "";
+      loginInfo.style.display = "none";
+      loginHeader.textContent = "Sign in to BCI Portal";
+      loginError.textContent = "";
+    }
+  });
+  loginModal.classList.add("active");
+}
+
+if (authButton) authButton.addEventListener("click", showLoginModal);
+if (loginClose) loginClose.addEventListener("click", () => loginModal.classList.remove("active"));
+
+if (loginSubmit) loginSubmit.addEventListener("click", async () => {
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value;
+  if (!email || !password) { loginError.textContent = "Please enter email and password"; return; }
+
+  loginSubmit.disabled = true;
+  loginSubmit.textContent = "Signing in...";
+  loginError.textContent = "";
+
+  try {
+    const client = window.AcademicDataAdapter.createAcademicClient();
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    loginModal.classList.remove("active");
+    updateAuthButton(data.session);
+    showToast("Signed in as " + (data.user?.user_metadata?.full_name || email));
+    await bootstrapCloudRole();
+  } catch (err) {
+    loginError.textContent = err.message || "Sign in failed";
+    loginError.style.color = "var(--danger, #e53e3e)";
+  } finally {
+    loginSubmit.disabled = false;
+    loginSubmit.textContent = "Sign in";
+  }
+});
+
+if (loginSignout) loginSignout.addEventListener("click", async () => {
+  try {
+    const client = window.AcademicDataAdapter.createAcademicClient();
+    await client.auth.signOut();
+    authLockedRole = false;
+    roleSelect.disabled = false;
+    appState.cloud = null;
+    updateAuthButton(null);
+    loginModal.classList.remove("active");
+    saveState();
+    showToast("Signed out");
+    renderPortal(currentRole, currentModule);
+  } catch (err) {
+    showToast("Sign out failed: " + err.message);
+  }
+});
+
+// Check existing session on load
+(async () => {
+  const client = window.AcademicDataAdapter?.createAcademicClient?.();
+  if (!client) return;
+  const { data } = await client.auth.getSession();
+  if (data.session) {
+    updateAuthButton(data.session);
+    await bootstrapCloudRole();
+  }
+})();

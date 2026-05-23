@@ -1808,10 +1808,10 @@ assignmentType?.addEventListener("change", () => {
   hideAllTypePanels();
   if (type === "essay") {
     showEssayBuilder();
-  } else if (["worksheet", "quiz"].includes(type)) {
+  } else if (["worksheet", "quiz", "mcq", "fill_blank", "reading"].includes(type)) {
     hideEssayBuilder();
     showQuestionsBuilder();
-  } else if (type === "practical") {
+  } else if (type === "practical" || type === "lab") {
     showTypePanel("practical-builder");
   } else if (type === "project") {
     showTypePanel("project-builder");

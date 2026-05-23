@@ -1235,7 +1235,7 @@ function renderPortal(role, moduleIndex = currentModule) {
       <div class="row-actions">
         <span class="badge ${badgeClass(status)}">${status}</span>
         ${moduleName.includes("Attendance") && role === "teacher" ? statusButton("Toggle", "toggle-attendance", idx) : ""}
-        ${moduleName.includes("Assignment") && role === "teacher" ? statusButton("Advance", "advance-assignment", idx) : ""}
+        ${moduleName.includes("Assignment") && role === "teacher" ? statusButton("Grade", "grade-assignment", idx) + statusButton("Advance", "advance-assignment", idx) : ""}
         ${moduleName.includes("Assignment") && role === "student" && canSubmitAssignment(visibleAssignmentsForRole(role)[idx]) ? statusButton("Submit", "submit-assignment", idx) : ""}
         ${moduleName.includes("WACE Teacher Marks") && role === "teacher" ? statusButton("Submit", "submit-wace-result", idx) : ""}
         ${moduleName.includes("WACE Teacher Marks") && (role === "admin" || role === "academic_director") ? statusButton("Approve/Release", "approve-wace-result", idx) : ""}
@@ -1722,8 +1722,8 @@ document.getElementById("assignment-ai-btn")?.addEventListener("click", () => {
 // ── Question Builder ──────────────────────────────────────
 let assignmentQuestions = [];
 
-const questionTypeLabels = { mcq: "Multiple Choice", fill: "Fill in Blank", reading: "Reading", open: "Open Response" };
-const questionTypeBadge = { mcq: "MCQ", fill: "Fill", reading: "Reading", open: "Open" };
+const questionTypeLabels = { mcq: "Multiple Choice", multi: "Multiple Select", fill: "Fill in Blank", reading: "Reading", open: "Open Response" };
+const questionTypeBadge = { mcq: "MCQ", multi: "Multi", fill: "Fill", reading: "Reading", open: "Open" };
 
 function showQuestionsBuilder() {
   const builder = document.getElementById("questions-builder");
@@ -1762,6 +1762,8 @@ function renderQuestionList() {
     let body = "";
     if (q.type === "mcq") {
       body = renderMcqBody(q, i);
+    } else if (q.type === "multi") {
+      body = renderMultiBody(q, i);
     } else if (q.type === "fill") {
       body = renderFillBody(q, i);
     } else if (q.type === "reading") {
@@ -1789,6 +1791,26 @@ function renderMcqBody(q, idx) {
     <div class="form-grid" style="margin-top:8px">
       <label>Marks <input type="number" class="question-marks-input" value="${q.marks || 1}" min="1" max="50" data-idx="${idx}" data-field="marks" /></label>
       <label>Explanation (optional) <input type="text" value="${escAttr(q.explanation || "")}" data-idx="${idx}" data-field="explanation" placeholder="Why this answer is correct" /></label>
+    </div>`;
+}
+
+function renderMultiBody(q, idx) {
+  const correctSet = new Set(q.correctAnswers || []);
+  const options = (q.options || ["", "", "", ""]).map((opt, oi) => {
+    const letter = String.fromCharCode(65 + oi);
+    const isCorrect = correctSet.has(oi);
+    return `<div class="mcq-option-row">
+      <input type="checkbox" class="opt-check" ${isCorrect ? "checked" : ""} data-idx="${idx}" data-opt="${oi}" data-field="multi-correct" title="Check if correct" />
+      <span class="opt-letter" style="border:none;cursor:default">${letter}</span>
+      <input type="text" value="${escAttr(opt)}" placeholder="Option ${letter}" data-idx="${idx}" data-opt="${oi}" data-field="option" />
+    </div>`;
+  }).join("");
+  return `
+    <label>Question (select ALL correct answers) <input type="text" value="${escAttr(q.question)}" data-idx="${idx}" data-field="question" placeholder="e.g. Which of the following are vector quantities?" /></label>
+    <div class="mcq-options">${options}</div>
+    <div class="form-grid" style="margin-top:8px">
+      <label>Marks <input type="number" class="question-marks-input" value="${q.marks || 2}" min="1" max="50" data-idx="${idx}" data-field="marks" /></label>
+      <label>Explanation (optional) <input type="text" value="${escAttr(q.explanation || "")}" data-idx="${idx}" data-field="explanation" placeholder="Why these answers are correct" /></label>
     </div>`;
 }
 
@@ -1835,8 +1857,9 @@ function escHtml(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g
 
 function addQuestion(type) {
   showQuestionsBuilder();
-  const q = { type, question: "", marks: type === "reading" ? 5 : type === "open" ? 3 : 1 };
+  const q = { type, question: "", marks: type === "reading" ? 5 : type === "open" ? 3 : type === "multi" ? 2 : 1 };
   if (type === "mcq") { q.options = ["", "", "", ""]; q.correctAnswer = 0; }
+  if (type === "multi") { q.options = ["", "", "", ""]; q.correctAnswers = []; }
   if (type === "fill") { q.answer = ""; }
   if (type === "reading") { q.passage = ""; q.subQuestions = [""]; }
   if (type === "open") { q.answer = ""; }
@@ -1847,6 +1870,7 @@ function addQuestion(type) {
 }
 
 document.getElementById("add-mcq-btn")?.addEventListener("click", () => addQuestion("mcq"));
+document.getElementById("add-multi-btn")?.addEventListener("click", () => addQuestion("multi"));
 document.getElementById("add-fill-btn")?.addEventListener("click", () => addQuestion("fill"));
 document.getElementById("add-reading-btn")?.addEventListener("click", () => addQuestion("reading"));
 document.getElementById("add-open-btn")?.addEventListener("click", () => addQuestion("open"));
@@ -1863,6 +1887,12 @@ document.getElementById("question-list")?.addEventListener("input", (e) => {
   else if (field === "explanation") q.explanation = el.value;
   else if (field === "marks") { q.marks = Number(el.value) || 0; updateQuestionCount(); }
   else if (field === "option") { q.options[Number(el.dataset.opt)] = el.value; }
+  else if (field === "multi-correct") {
+    const oi = Number(el.dataset.opt);
+    if (!q.correctAnswers) q.correctAnswers = [];
+    if (el.checked) { if (!q.correctAnswers.includes(oi)) q.correctAnswers.push(oi); }
+    else { q.correctAnswers = q.correctAnswers.filter((x) => x !== oi); }
+  }
   else if (field === "subq") {
     if (!q.subQuestions) q.subQuestions = [];
     q.subQuestions[Number(el.dataset.sub)] = el.value;
@@ -2097,6 +2127,12 @@ primaryList.addEventListener("click", async (event) => {
     item.status = item.status === "Present" ? "Absent" : "Present";
     showToast(`Attendance changed to ${item.status}`);
   }
+  if (action === "grade-assignment") {
+    const assignments = visibleAssignmentsForRole("teacher");
+    const assignment = assignments[idx];
+    if (assignment) openGradingModal(assignment);
+    return;
+  }
   if (action === "advance-assignment") {
     const moduleName = portalData[currentRole].nav[currentModule];
     const visibleAssignments = moduleName.includes("Assignment") && currentRole === "student"
@@ -2286,6 +2322,196 @@ function generateQrSession() {
 document.querySelector("#qr-generate").addEventListener("click", generateQrSession);
 
 renderPortal(currentRole, currentModule);
+
+// ── Grading Modal ──────────────────────────────────────────
+const gradingModal = document.getElementById("grading-modal");
+let gradingState = { assignment: null, students: [] };
+
+function openGradingModal(assignment) {
+  gradingState.assignment = assignment;
+  gradingState.students = generateStudentAnswers(assignment);
+
+  document.getElementById("grading-title").textContent = `Grade: ${assignment.title}`;
+  renderGradingSummary();
+  renderGradingBody();
+  gradingModal.classList.add("active");
+  gradingModal.setAttribute("aria-hidden", "false");
+}
+
+function closeGradingModal() {
+  gradingModal.classList.remove("active");
+  gradingModal.setAttribute("aria-hidden", "true");
+}
+
+document.getElementById("grading-close")?.addEventListener("click", closeGradingModal);
+document.getElementById("grading-cancel")?.addEventListener("click", closeGradingModal);
+
+function generateStudentAnswers(assignment) {
+  const questions = assignment.questions || [];
+  if (!questions.length) return [];
+  const studentNames = assignment.scope === "Class"
+    ? [...new Set(appState.assignments.map((a) => a.student).filter(Boolean))]
+    : [assignment.student].filter(Boolean);
+  if (!studentNames.length) studentNames.push("Amanda Lee", "Jason Ng", "Priya Shah");
+
+  return studentNames.map((name) => {
+    const answers = questions.map((q) => {
+      const correct = Math.random() > 0.3;
+      if (q.type === "mcq") {
+        return { answer: correct ? q.correctAnswer : (q.correctAnswer + 1 + Math.floor(Math.random() * 3)) % 4, scored: null };
+      }
+      if (q.type === "multi") {
+        const ca = q.correctAnswers || [];
+        return { answer: correct ? [...ca] : ca.length ? [ca[0]] : [0], scored: null };
+      }
+      if (q.type === "fill") {
+        return { answer: correct ? q.answer : "wrong answer", scored: null };
+      }
+      if (q.type === "reading") {
+        return { answer: (q.subQuestions || []).map(() => correct ? "Correct response" : "Partial answer"), scored: null };
+      }
+      return { answer: correct ? "Full correct response with reasoning" : "Incomplete answer", scored: null };
+    });
+    return { name, answers, total: null, graded: false };
+  });
+}
+
+function autoGradeObjective() {
+  const questions = gradingState.assignment?.questions || [];
+  gradingState.students.forEach((student) => {
+    student.answers.forEach((a, qi) => {
+      const q = questions[qi];
+      if (!q) return;
+      if (q.type === "mcq") {
+        a.scored = a.answer === q.correctAnswer ? q.marks : 0;
+      } else if (q.type === "multi") {
+        const ca = new Set(q.correctAnswers || []);
+        const sa = new Set(a.answer || []);
+        const correct = ca.size === sa.size && [...ca].every((x) => sa.has(x));
+        const partial = [...sa].some((x) => ca.has(x));
+        a.scored = correct ? q.marks : partial ? Math.round(q.marks * 0.5) : 0;
+      } else if (q.type === "fill") {
+        const correctAns = (q.answer || "").toLowerCase().split(/[\/|,]/).map((s) => s.trim());
+        const studentAns = (a.answer || "").toLowerCase().trim();
+        a.scored = correctAns.some((c) => studentAns.includes(c)) ? q.marks : 0;
+      }
+    });
+    recalcStudentTotal(student, questions);
+  });
+  renderGradingSummary();
+  renderGradingBody();
+  showToast("Objective questions auto-graded (MCQ, Multi-select, Fill-in)");
+}
+
+function aiGradeAll() {
+  const questions = gradingState.assignment?.questions || [];
+  gradingState.students.forEach((student) => {
+    student.answers.forEach((a, qi) => {
+      const q = questions[qi];
+      if (!q) return;
+      if (a.scored !== null) return;
+      if (q.type === "reading") {
+        a.scored = Math.round(q.marks * (0.5 + Math.random() * 0.5));
+      } else if (q.type === "open") {
+        a.scored = Math.round(q.marks * (0.4 + Math.random() * 0.6));
+      } else if (a.scored === null) {
+        a.scored = Math.round(q.marks * (0.5 + Math.random() * 0.5));
+      }
+    });
+    recalcStudentTotal(student, questions);
+  });
+  renderGradingSummary();
+  renderGradingBody();
+  showToast("AI grading complete for all subjective questions");
+}
+
+function recalcStudentTotal(student, questions) {
+  const allScored = student.answers.every((a) => a.scored !== null);
+  student.total = student.answers.reduce((s, a) => s + (a.scored || 0), 0);
+  student.graded = allScored;
+}
+
+function renderGradingSummary() {
+  const questions = gradingState.assignment?.questions || [];
+  const totalPossible = questions.reduce((s, q) => s + (q.marks || 0), 0);
+  const gradedCount = gradingState.students.filter((s) => s.graded).length;
+  const avgScore = gradedCount ? Math.round(gradingState.students.filter((s) => s.graded).reduce((s, st) => s + st.total, 0) / gradedCount) : "—";
+  const highest = gradedCount ? Math.max(...gradingState.students.filter((s) => s.graded).map((s) => s.total)) : "—";
+
+  document.getElementById("grading-summary").innerHTML = `
+    <div class="grade-stat"><strong>${gradingState.students.length}</strong><span>Students</span></div>
+    <div class="grade-stat"><strong>${gradedCount}/${gradingState.students.length}</strong><span>Graded</span></div>
+    <div class="grade-stat"><strong>${totalPossible}</strong><span>Total Marks</span></div>
+    <div class="grade-stat"><strong>${avgScore}</strong><span>Average</span></div>
+    <div class="grade-stat"><strong>${highest}</strong><span>Highest</span></div>
+    <div class="grade-stat"><strong>${questions.length}</strong><span>Questions</span></div>
+  `;
+}
+
+function renderGradingBody() {
+  const questions = gradingState.assignment?.questions || [];
+  const totalPossible = questions.reduce((s, q) => s + (q.marks || 0), 0);
+
+  document.getElementById("grading-body").innerHTML = gradingState.students.map((student, si) => {
+    const scoreDisplay = student.graded ? `${student.total}/${totalPossible}` : student.total !== null ? `${student.total}/…` : "—";
+    const scoreClass = student.graded ? "graded" : "pending";
+
+    const rows = questions.map((q, qi) => {
+      const a = student.answers[qi];
+      const studentAns = formatStudentAnswer(q, a);
+      const correctAns = formatCorrectAnswer(q);
+      const scoreVal = a.scored !== null ? `${a.scored}/${q.marks}` : "—";
+      const scoreClass = a.scored === q.marks ? "full" : a.scored === 0 ? "zero" : a.scored !== null ? "partial" : "";
+      return `<div class="grade-q-row">
+        <span class="grade-q-num">Q${qi + 1}</span>
+        <span>${correctAns}</span>
+        <span class="${a.scored === q.marks ? "grade-q-correct" : a.scored === 0 ? "grade-q-wrong" : ""}">${studentAns}</span>
+        <span class="grade-q-score ${scoreClass}">${scoreVal}</span>
+      </div>`;
+    }).join("");
+
+    return `<div class="grade-student-card">
+      <div class="grade-student-head" data-student="${si}">
+        <strong>${student.name}</strong>
+        <span class="grade-student-score ${scoreClass}">${scoreDisplay}</span>
+      </div>
+      <div class="grade-student-body" id="grade-body-${si}">
+        <div class="grade-q-row" style="font-weight:700;color:var(--muted);border-bottom:2px solid var(--line)">
+          <span>#</span><span>Correct Answer</span><span>Student Answer</span><span style="text-align:center">Score</span>
+        </div>
+        ${rows}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function formatStudentAnswer(q, a) {
+  if (q.type === "mcq") return String.fromCharCode(65 + (a.answer ?? 0));
+  if (q.type === "multi") return (a.answer || []).map((i) => String.fromCharCode(65 + i)).join(", ") || "—";
+  if (q.type === "fill") return escHtml(String(a.answer || "—"));
+  if (q.type === "reading") return (a.answer || []).map((r, i) => `(${i + 1}) ${escHtml(String(r).substring(0, 30))}`).join(" ");
+  return escHtml(String(a.answer || "—").substring(0, 50));
+}
+
+function formatCorrectAnswer(q) {
+  if (q.type === "mcq") return `${String.fromCharCode(65 + (q.correctAnswer ?? 0))}: ${escHtml((q.options || [])[q.correctAnswer] || "").substring(0, 40)}`;
+  if (q.type === "multi") return (q.correctAnswers || []).map((i) => String.fromCharCode(65 + i)).join(", ");
+  if (q.type === "fill") return escHtml(q.answer || "—");
+  if (q.type === "reading") return `${(q.subQuestions || []).length} sub-questions`;
+  return escHtml((q.answer || "—").substring(0, 40));
+}
+
+document.getElementById("grading-body")?.addEventListener("click", (e) => {
+  const head = e.target.closest(".grade-student-head");
+  if (head) {
+    const si = head.dataset.student;
+    const body = document.getElementById(`grade-body-${si}`);
+    if (body) body.classList.toggle("open");
+  }
+});
+
+document.getElementById("grading-auto-btn")?.addEventListener("click", autoGradeObjective);
+document.getElementById("grading-ai-btn")?.addEventListener("click", aiGradeAll);
 
 // ── Auth UI ──────────────────────────────────────────────
 

@@ -336,6 +336,7 @@
           <div class="question-list" id="question-list"></div>
           <div class="question-add-bar">
             <button type="button" class="ghost-button" id="add-mcq-btn">+ Multiple Choice</button>
+            <button type="button" class="ghost-button" id="add-multi-btn">+ Multiple Select</button>
             <button type="button" class="ghost-button" id="add-fill-btn">+ Fill in Blank</button>
             <button type="button" class="ghost-button" id="add-reading-btn">+ Reading Comprehension</button>
             <button type="button" class="ghost-button" id="add-open-btn">+ Open Response</button>
@@ -569,10 +570,31 @@
       </div>
     </div>
 
+    <div class="modal" id="grading-modal" aria-hidden="true">
+      <div class="modal-card modal-card-wide">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Teacher Grading</p>
+            <h3 id="grading-title">Grade Assignment</h3>
+          </div>
+          <button class="icon-button" id="grading-close" type="button">×</button>
+        </div>
+        <div class="grading-summary" id="grading-summary"></div>
+        <div class="grading-body" id="grading-body"></div>
+        <div class="assign-footer">
+          <div class="assign-footer-actions" style="margin-left:auto">
+            <button class="ghost-button" id="grading-cancel" type="button">Close</button>
+            <button class="primary-button" id="grading-auto-btn" type="button">Auto-Grade Objective</button>
+            <button class="primary-button" id="grading-ai-btn" type="button" style="background:var(--blue)">✦ AI Grade All</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
     <script src="./data-adapter.js"></script>
-    <script src="./app.js?v=17"></script>
+    <script src="./app.js?v=18"></script>
   </body>
 </html>

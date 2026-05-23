@@ -1031,6 +1031,122 @@ body.dark .question-badge.open { background: #2a1a40; color: #b08ae6; }
   color: var(--red);
 }
 
+.question-badge.multi { background: #e0f0f8; color: #1a6b8a; }
+body.dark .question-badge.multi { background: #1a3540; color: #6dc8e8; }
+
+.mcq-option-row .opt-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.grading-summary {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.grade-stat {
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  text-align: center;
+}
+
+.grade-stat strong {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.grade-stat span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.grading-body {
+  margin-top: 14px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.grade-student-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.grade-student-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.grade-student-head strong {
+  font-size: 14px;
+}
+
+.grade-student-score {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.grade-student-score.graded { color: var(--green); }
+.grade-student-score.pending { color: var(--muted); }
+
+.grade-student-body {
+  padding: 12px 14px;
+  display: none;
+}
+
+.grade-student-body.open {
+  display: block;
+}
+
+.grade-q-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 1fr 70px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.grade-q-row:last-child {
+  border-bottom: none;
+}
+
+.grade-q-num {
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.grade-q-correct {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.grade-q-wrong {
+  color: var(--red);
+}
+
+.grade-q-score {
+  text-align: center;
+  font-weight: 700;
+}
+
+.grade-q-score.full { color: var(--green); }
+.grade-q-score.zero { color: var(--red); }
+.grade-q-score.partial { color: var(--amber); }
+
 @media (max-width: 720px) {
   .assign-form-body {
     grid-template-columns: 1fr;

@@ -1767,6 +1767,9 @@ function showLoginModal() {
 
 if (authButton) authButton.addEventListener("click", showLoginModal);
 if (loginClose) loginClose.addEventListener("click", () => loginModal.classList.remove("active"));
+loginModal.addEventListener("click", (event) => {
+  if (event.target === loginModal) loginModal.classList.remove("active");
+});
 
 if (loginSubmit) loginSubmit.addEventListener("click", async () => {
   const email = loginEmail.value.trim();

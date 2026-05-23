@@ -181,13 +181,14 @@ async function createIndividualAssignment({ studentName, subjectName, title, des
     });
   if (targetError) throw targetError;
 
-  await client.from("evidence_items").insert({
+  const { error: evidenceError } = await client.from("evidence_items").insert({
     evidence_type: "Assignment",
     title: `${subjectName} individual homework created for ${studentName}`,
     related_table: "assignments",
     related_id: assignment.id,
     status: "complete",
   });
+  if (evidenceError) throw evidenceError;
 
   return { assignment, targetStudentId: ids.studentId, assignedByTeacherId: ids.teacherId };
 }
@@ -235,22 +236,29 @@ async function loadRubric(assignmentId) {
   return { ...rubric, criteria: criteria || [] };
 }
 
-async function saveRubric({ assignmentId, outlineId, title, totalMarks, criteria }) {
+async function saveRubric({ id, assignmentId, outlineId, title, totalMarks, criteria }) {
   const client = createAcademicClient();
   if (!client) return null;
-  const { data: rubric, error: rErr } = await client
-    .from("rubrics")
-    .upsert({
-      assignment_id: assignmentId || null,
-      outline_id: outlineId || null,
-      title,
-      total_marks: totalMarks,
-      status: "active",
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "id" })
-    .select()
-    .single();
-  if (rErr) throw rErr;
+  const payload = {
+    assignment_id: assignmentId || null,
+    outline_id: outlineId || null,
+    title,
+    total_marks: totalMarks,
+    status: "active",
+    updated_at: new Date().toISOString(),
+  };
+  let rubric;
+  if (id) {
+    const { data, error } = await client.from("rubrics").update(payload).eq("id", id).select().single();
+    if (error) throw error;
+    rubric = data;
+    const { error: delErr } = await client.from("rubric_criteria").delete().eq("rubric_id", id);
+    if (delErr) throw delErr;
+  } else {
+    const { data, error } = await client.from("rubrics").insert(payload).select().single();
+    if (error) throw error;
+    rubric = data;
+  }
   if (criteria?.length) {
     const rows = criteria.map((c, i) => ({
       rubric_id: rubric.id,

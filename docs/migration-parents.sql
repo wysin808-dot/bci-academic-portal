@@ -89,7 +89,7 @@ BEGIN
   -- Create student auth user
   INSERT INTO auth.users (
     id, instance_id, aud, role, email, encrypted_password,
-    email_confirmed_at, confirmed_at, confirmation_token, confirmation_sent_at,
+    email_confirmed_at, confirmation_token, confirmation_sent_at,
     recovery_token, email_change_token_new, email_change, email_change_token_current,
     email_change_confirm_status, phone_change, phone_change_token, reauthentication_token,
     raw_app_meta_data, raw_user_meta_data,
@@ -97,7 +97,7 @@ BEGIN
   ) VALUES (
     v_user_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
     p_email, crypt(p_password, gen_salt('bf')),
-    v_now, v_now, '', NULL,
+    v_now, '', NULL,
     '', '', '', '',
     0, '', '', '',
     '{"provider":"email","providers":["email"]}'::JSONB,
@@ -146,7 +146,7 @@ BEGIN
 
       INSERT INTO auth.users (
         id, instance_id, aud, role, email, encrypted_password,
-        email_confirmed_at, confirmed_at, confirmation_token, confirmation_sent_at,
+        email_confirmed_at, confirmation_token, confirmation_sent_at,
         recovery_token, email_change_token_new, email_change, email_change_token_current,
         email_change_confirm_status, phone_change, phone_change_token, reauthentication_token,
         raw_app_meta_data, raw_user_meta_data,
@@ -154,7 +154,7 @@ BEGIN
       ) VALUES (
         v_parent_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
         p_parent_email, crypt(COALESCE(NULLIF(p_parent_password, ''), 'BCI2025parent'), gen_salt('bf')),
-        v_now, v_now, '', NULL,
+        v_now, '', NULL,
         '', '', '', '',
         0, '', '', '',
         '{"provider":"email","providers":["email"]}'::JSONB,
